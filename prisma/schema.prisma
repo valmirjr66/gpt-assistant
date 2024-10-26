@@ -1,0 +1,24 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  system
+  user
+  assistant
+}
+
+model Message {
+  id    String  @id @map("_id") @default(uuid())
+  content String
+  role Role
+  conversationId String
+}

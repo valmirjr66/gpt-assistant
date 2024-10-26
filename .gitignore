@@ -1,0 +1,9 @@
+.next
+**/*.db
+yarn-error.*
+.env
+
+**/.vscode
+**/node_modules
+**/dist
+**/build
