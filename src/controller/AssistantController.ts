@@ -12,9 +12,9 @@ import InsertMessageRequestDto from 'src/dto/InsertMessageRequestDto';
 import GptService from 'src/service/GptService';
 import BaseController from './BaseController';
 
-@ApiTags('GPT')
-@Controller('gpt')
-export default class GptController extends BaseController {
+@ApiTags('Assistant')
+@Controller('assistant')
+export default class AssistantController extends BaseController {
   constructor(private readonly gptService: GptService) {
     super();
   }

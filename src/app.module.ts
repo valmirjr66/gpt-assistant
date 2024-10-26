@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import BlobManager from './blob/BlobManager';
-import GptController from './controller/GptController';
+import AssistantController from './controller/AssistantController';
 import ChatAgent from './gpt/ChatAgent';
 import MessageRepository from './repository/MessageRepository';
 import GptService from './service/GptService';
 
 @Module({
   imports: [],
-  controllers: [GptController],
+  controllers: [AssistantController],
   providers: [
     MessageRepository,
     BlobManager,
