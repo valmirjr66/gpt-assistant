@@ -16,7 +16,7 @@ enum Role {
   assistant
 }
 
-model Message {
+model Messages {
   id    String  @id @map("_id") @default(uuid())
   content String
   role Role
