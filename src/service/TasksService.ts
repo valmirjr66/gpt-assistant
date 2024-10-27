@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import BlobManager from 'src/blob/BlobManager';
 import GetTasksResponseModel from 'src/model/GetTasksResponseModel';
+import InsertTaskRequestModel from 'src/model/InsertTaskRequestModel';
+import InsertTaskResponseModel from 'src/model/InsertTaskResponseModel';
 import { TaskCategory } from 'src/types/tasks';
 import BaseService from './BaseService';
 
@@ -26,5 +28,17 @@ export default class TasksService extends BaseService {
     }
 
     return new GetTasksResponseModel(tasks);
+  }
+
+  async insertTask(model: InsertTaskRequestModel): Promise<InsertTaskResponseModel> {
+    const memoryBuffer = await this.blobManager.read("memory.json");
+    const memoryStr = memoryBuffer.toString("binary");
+    const memory = JSON.parse(memoryStr);
+
+    memory.tasks[model.categoryId].items.push(model.task);
+
+    await this.blobManager.write("memory.json", Buffer.from(JSON.stringify(memory), "binary"));
+
+    return model;
   }
 }
