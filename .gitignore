@@ -9,3 +9,6 @@ yarn-error.*
 
 # MongoDB
 **/data
+
+# Jest coverage report
+**/coverage
