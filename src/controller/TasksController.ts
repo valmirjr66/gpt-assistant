@@ -3,7 +3,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiNoContentResponse,
   ApiOkResponse,
-  ApiTags
+  ApiTags,
 } from '@nestjs/swagger';
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
 import GetTasksResponseDto from 'src/dto/GetTasksResponseDto';
@@ -22,7 +22,9 @@ export default class TasksController extends BaseController {
   @Get()
   @ApiOkResponse({ description: ResponseDescriptions.OK })
   @ApiNoContentResponse({ description: ResponseDescriptions.NO_CONTENT })
-  @ApiInternalServerErrorResponse({ description: ResponseDescriptions.INTERNAL_SERVER_ERROR })
+  @ApiInternalServerErrorResponse({
+    description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+  })
   async getTasks(): Promise<GetTasksResponseDto> {
     const response = await this.tasksService.getTasks();
     this.validateGetResponse(response);
@@ -32,8 +34,12 @@ export default class TasksController extends BaseController {
   @Post()
   @ApiOkResponse({ description: ResponseDescriptions.OK })
   @ApiNoContentResponse({ description: ResponseDescriptions.BAD_REQUEST })
-  @ApiInternalServerErrorResponse({ description: ResponseDescriptions.INTERNAL_SERVER_ERROR })
-  async insertTask(@Body() dto: InsertTaskRequestDto): Promise<InsertTaskResponseDto> {
+  @ApiInternalServerErrorResponse({
+    description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+  })
+  async insertTask(
+    @Body() dto: InsertTaskRequestDto,
+  ): Promise<InsertTaskResponseDto> {
     const response = await this.tasksService.insertTask(dto);
     return response;
   }

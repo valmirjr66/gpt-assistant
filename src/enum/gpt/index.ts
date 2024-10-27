@@ -1,7 +1,7 @@
 enum Roles {
   SYSTEM = 'system',
   USER = 'user',
-  ASSISTANT = 'assistant'
-};
+  ASSISTANT = 'assistant',
+}
 
-export { Roles }
+export { Roles };

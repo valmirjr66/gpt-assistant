@@ -1,4 +1,4 @@
-import { Message } from "src/types/gpt";
+import { Message } from 'src/types/gpt';
 
 export default class GetConversationResponseDto {
   id: string;

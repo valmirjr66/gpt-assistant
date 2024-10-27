@@ -1,4 +1,4 @@
-import { IsUUID, MaxLength, MinLength } from "class-validator";
+import { IsUUID, MaxLength, MinLength } from 'class-validator';
 
 export default class InsertTaskRequestDto {
   @IsUUID()
@@ -9,7 +9,7 @@ export default class InsertTaskRequestDto {
   task: string;
 
   constructor(categoryId: string, task: string) {
-    this.categoryId = categoryId
-    this.task = task
+    this.categoryId = categoryId;
+    this.task = task;
   }
 }

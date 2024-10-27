@@ -22,8 +22,12 @@ export default class AssistantController extends BaseController {
   @Get('/conversation/:id')
   @ApiOkResponse({ description: ResponseDescriptions.OK })
   @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
-  @ApiInternalServerErrorResponse({ description: ResponseDescriptions.INTERNAL_SERVER_ERROR })
-  async getConversationById(@Param('id') id: string): Promise<GetConversationResponseDto> {
+  @ApiInternalServerErrorResponse({
+    description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+  })
+  async getConversationById(
+    @Param('id') id: string,
+  ): Promise<GetConversationResponseDto> {
     const response = await this.assistantService.getConversationById(id);
     this.validateGetResponse(response);
     return response;
@@ -32,8 +36,12 @@ export default class AssistantController extends BaseController {
   @Post('/chat/message')
   @ApiOkResponse({ description: ResponseDescriptions.OK })
   @ApiNotFoundResponse({ description: ResponseDescriptions.BAD_REQUEST })
-  @ApiInternalServerErrorResponse({ description: ResponseDescriptions.INTERNAL_SERVER_ERROR })
-  async insertMessage(@Body() dto: InsertMessageRequestDto): Promise<InsertMessageResponseDto> {
+  @ApiInternalServerErrorResponse({
+    description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+  })
+  async insertMessage(
+    @Body() dto: InsertMessageRequestDto,
+  ): Promise<InsertMessageResponseDto> {
     const response = await this.assistantService.insertMessage(dto);
     return response;
   }

@@ -8,10 +8,6 @@ import TasksService from './service/TasksService';
 @Module({
   imports: [],
   controllers: [AssistantController, TasksController],
-  providers: [
-    BlobManager,
-    AssistantService,
-    TasksService
-  ]
+  providers: [BlobManager, AssistantService, TasksService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -31,7 +31,7 @@ async function bootstrap() {
   const apiPort = process.env.API_PORT || 4000;
 
   await app.listen(apiPort);
-  
+
   console.log(`\nAPI running on port ${apiPort}`);
   console.log(`Swagger documentation available on /ui\n`);
 }
