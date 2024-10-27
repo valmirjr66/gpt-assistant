@@ -1,20 +1,19 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
     ValidationArguments,
     ValidatorConstraint,
     ValidatorConstraintInterface,
 } from 'class-validator';
-import BlobManager from 'src/handlers/blob/BlobManager';
+import BlobManagerFactory from 'src/handlers/blob/BlobManagerFactory';
+import BlobManagerInterface from 'src/handlers/blob/BlobManagerInterface';
 
 @ValidatorConstraint({ name: 'TaskCategoryExistValidator', async: true })
 @Injectable()
 export default class TaskCategoryIdExistValidator
     implements ValidatorConstraintInterface
 {
-    constructor(
-        @Optional()
-        private readonly blobManager: BlobManager = new BlobManager(),
-    ) {}
+    private readonly blobManager: BlobManagerInterface =
+        BlobManagerFactory.createManager();
 
     async validate(categoryId: string): Promise<boolean> {
         const memoryBuffer = await this.blobManager.read('memory.json');

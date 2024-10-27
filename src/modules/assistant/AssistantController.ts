@@ -34,7 +34,7 @@ export default class AssistantController extends BaseController {
     }
 
     @Post('/chat/message')
-    @ApiOkResponse({ description: ResponseDescriptions.OK })
+    @ApiOkResponse({ description: ResponseDescriptions.CREATED })
     @ApiNotFoundResponse({ description: ResponseDescriptions.BAD_REQUEST })
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,

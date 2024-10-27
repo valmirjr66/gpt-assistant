@@ -1,5 +1,6 @@
-import { Injectable, Optional } from '@nestjs/common';
-import BlobManager from 'src/handlers/blob/BlobManager';
+import { Injectable } from '@nestjs/common';
+import BlobManagerFactory from 'src/handlers/blob/BlobManagerFactory';
+import BlobManagerInterface from 'src/handlers/blob/BlobManagerInterface';
 import GetTasksResponseModel from 'src/modules/tasks/model/GetTasksResponseModel';
 import InsertTaskRequestModel from 'src/modules/tasks/model/InsertTaskRequestModel';
 import InsertTaskResponseModel from 'src/modules/tasks/model/InsertTaskResponseModel';
@@ -8,10 +9,10 @@ import BaseService from '../../BaseService';
 
 @Injectable()
 export default class TasksService extends BaseService {
-    constructor(
-        @Optional()
-        private readonly blobManager: BlobManager = new BlobManager(),
-    ) {
+    private readonly blobManager: BlobManagerInterface =
+        BlobManagerFactory.createManager();
+
+    constructor() {
         super();
     }
 

@@ -1,7 +1,8 @@
 import fs from 'fs-extra';
+import BlobManagerInterface from './BlobManagerInterface';
 
-export default class BlobManager {
-    private readonly basePath: string = process.env.BASE_BLOB_PATH;
+export default class FileSystemBlobManager implements BlobManagerInterface {
+    private readonly basePath: string = 'storage';
 
     async write(path: string, file: Buffer): Promise<void> {
         try {
