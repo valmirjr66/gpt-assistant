@@ -10,64 +10,66 @@ import BaseService from './BaseService';
 
 @Injectable()
 export default class AssistantService extends BaseService {
-  constructor(
-    @Optional()
-    private readonly chatAgent: ChatAgent = new ChatAgent(
-      ASSISTANT_DESCRIPTION,
-    ),
-  ) {
-    super();
-    this.chatAgent = chatAgent;
-  }
+    constructor(
+        @Optional()
+        private readonly chatAgent: ChatAgent = new ChatAgent(
+            ASSISTANT_DESCRIPTION,
+        ),
+    ) {
+        super();
+        this.chatAgent = chatAgent;
+    }
 
-  async getConversationById(id: string): Promise<GetConversationResponseModel> {
-    const conversationMessages: Message[] =
-      await this.prismaClient.message.findMany({
-        where: { conversationId: id },
-      });
+    async getConversationById(
+        id: string,
+    ): Promise<GetConversationResponseModel> {
+        const conversationMessages: Message[] =
+            await this.prismaClient.message.findMany({
+                where: { conversationId: id },
+            });
 
-    const conversation = new GetConversationResponseModel(
-      id,
-      conversationMessages,
-    );
+        const conversation = new GetConversationResponseModel(
+            id,
+            conversationMessages,
+        );
 
-    return conversation;
-  }
+        return conversation;
+    }
 
-  async insertMessage(
-    model: InsertMessageRequestModel,
-  ): Promise<InsertMessageResponseModel> {
-    const conversationMessages: Message[] =
-      await this.prismaClient.message.findMany({
-        where: { conversationId: model.conversationId },
-      });
+    async insertMessage(
+        model: InsertMessageRequestModel,
+    ): Promise<InsertMessageResponseModel> {
+        const conversationMessages: Message[] =
+            await this.prismaClient.message.findMany({
+                where: { conversationId: model.conversationId },
+            });
 
-    const newMessage: Message = await this.prismaClient.message.create({
-      data: {
-        content: model.content,
-        conversationId: model.conversationId,
-        role: Roles.USER,
-      },
-    });
+        const newMessage: Message = await this.prismaClient.message.create({
+            data: {
+                content: model.content,
+                conversationId: model.conversationId,
+                role: Roles.USER,
+            },
+        });
 
-    conversationMessages.push(newMessage);
+        conversationMessages.push(newMessage);
 
-    const completion =
-      await this.chatAgent.createCompletion(conversationMessages);
+        const completion =
+            await this.chatAgent.createCompletion(conversationMessages);
 
-    const response: Message = await this.prismaClient.message.create({
-      data: {
-        content: completion,
-        conversationId: model.conversationId,
-        role: Roles.ASSISTANT,
-      },
-    });
+        const response: Message = await this.prismaClient.message.create({
+            data: {
+                content: completion,
+                conversationId: model.conversationId,
+                role: Roles.ASSISTANT,
+            },
+        });
 
-    return new InsertMessageResponseModel(
-      response.id,
-      response.content,
-      response.role,
-      response.conversationId,
-    );
-  }
+        return new InsertMessageResponseModel(
+            response.id,
+            response.content,
+            response.role,
+            response.conversationId,
+        );
+    }
 }

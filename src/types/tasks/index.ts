@@ -1,7 +1,7 @@
 type TaskCategory = {
-  id: string;
-  description: string;
-  items: string[];
+    id: string;
+    description: string;
+    items: string[];
 };
 
 export { TaskCategory };
