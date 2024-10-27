@@ -6,4 +6,6 @@ yarn-error.*
 **/node_modules
 **/dist
 **/build
+
+# MongoDB
 **/data
