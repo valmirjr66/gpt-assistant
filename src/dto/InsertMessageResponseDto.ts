@@ -1,6 +1,6 @@
 import { Role } from "src/types/gpt";
 
-export default class InsertMessageResponseModel {
+export default class InsertMessageResponseDto {
   id: string;
   content: string;
   role: Role;

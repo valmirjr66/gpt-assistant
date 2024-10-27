@@ -1,10 +1,5 @@
 import OpenAI from 'openai';
-import {
-  ChatCompletionAssistantMessageParam,
-  ChatCompletionSystemMessageParam,
-  ChatCompletionUserMessageParam,
-} from 'openai/resources/index.mjs';
-import ConversationDto from 'src/dto/ConversationDto';
+import { Message } from 'src/types/gpt';
 
 export default class ChatAgent {
   private readonly setupMessage: string;
@@ -13,23 +8,17 @@ export default class ChatAgent {
     this.setupMessage = setupMessage;
   }
 
-  async createCompletion(conversation: ConversationDto): Promise<string> {
+  async createCompletion(messages: Message[]): Promise<string> {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_SECRET_KEY });
 
-    const messages: Array<
-      | ChatCompletionSystemMessageParam
-      | ChatCompletionUserMessageParam
-      | ChatCompletionAssistantMessageParam
-    > = [
-      { role: 'system', content: this.setupMessage },
-      ...conversation.messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      })),
-    ];
-
     const completion = await openai.chat.completions.create({
-      messages,
+      messages: [
+        { role: 'system', content: this.setupMessage },
+        ...messages.map((message) => ({
+          role: message.role,
+          content: message.content,
+        })),
+      ],
       model: 'gpt-4o',
     });
 

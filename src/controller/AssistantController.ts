@@ -6,41 +6,35 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
-import ConversationDto from 'src/dto/ConversationDto';
-import GptResponseDto from 'src/dto/GptResponseDto';
+import GetConversationResponseDto from 'src/dto/GetConversationResponseDto';
 import InsertMessageRequestDto from 'src/dto/InsertMessageRequestDto';
-import GptService from 'src/service/GptService';
+import InsertMessageResponseDto from 'src/dto/InsertMessageResponseDto';
+import AssistantService from 'src/service/AssistantService';
 import BaseController from './BaseController';
 
 @ApiTags('Assistant')
 @Controller('assistant')
 export default class AssistantController extends BaseController {
-  constructor(private readonly gptService: GptService) {
+  constructor(private readonly assistantService: AssistantService) {
     super();
   }
 
-  @Get('/chat/:id')
+  @Get('/conversation/:id')
   @ApiOkResponse({ description: ResponseDescriptions.OK })
   @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
-  @ApiInternalServerErrorResponse({
-    description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
-  })
-  async getConversationById(@Param('id') id: string): Promise<ConversationDto> {
-    const response = await this.gptService.getConversationById(id);
+  @ApiInternalServerErrorResponse({ description: ResponseDescriptions.INTERNAL_SERVER_ERROR })
+  async getConversationById(@Param('id') id: string): Promise<GetConversationResponseDto> {
+    const response = await this.assistantService.getConversationById(id);
     this.validateGetResponse(response);
     return response;
   }
 
   @Post('/chat/message')
   @ApiOkResponse({ description: ResponseDescriptions.OK })
-  @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
-  @ApiInternalServerErrorResponse({
-    description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
-  })
-  async insertMessage(
-    @Body() message: InsertMessageRequestDto,
-  ): Promise<GptResponseDto> {
-    const response = await this.gptService.sendMessage(message);
+  @ApiNotFoundResponse({ description: ResponseDescriptions.BAD_REQUEST })
+  @ApiInternalServerErrorResponse({ description: ResponseDescriptions.INTERNAL_SERVER_ERROR })
+  async insertMessage(@Body() message: InsertMessageRequestDto): Promise<InsertMessageResponseDto> {
+    const response = await this.assistantService.insertMessage(message);
     return response;
   }
 }

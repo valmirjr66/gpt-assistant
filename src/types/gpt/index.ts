@@ -1,3 +1,16 @@
-type Roles = 'system' | 'user' | 'assistant';
+type Role = 'system' | 'user' | 'assistant'
 
-export { Roles }
+type Message = {
+  id: string
+  conversationId: string
+  role: Role
+  content: string
+}
+
+type Conversation = {
+  id: string
+  messages: Message[]
+}
+
+export { Conversation, Message, Role }
+
