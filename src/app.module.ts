@@ -8,10 +8,6 @@ import TasksService from './service/TasksService';
 @Module({
     imports: [],
     controllers: [AssistantController, TasksController],
-    providers: [
-        AssistantService,
-        TasksService,
-        TaskCategoryIdExistValidator,
-    ]
+    providers: [AssistantService, TasksService, TaskCategoryIdExistValidator],
 })
-export class AppModule { }
+export class AppModule {}
