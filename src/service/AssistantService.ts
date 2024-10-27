@@ -24,14 +24,14 @@ export default class AssistantService extends BaseService {
     return conversation;
   }
 
-  async insertMessage(message: InsertMessageRequestModel): Promise<InsertMessageResponseModel> {
+  async insertMessage(model: InsertMessageRequestModel): Promise<InsertMessageResponseModel> {
     const conversationMessages: Message[] =
-      await this.prismaClient.message.findMany({ where: { conversationId: message.conversationId } });
+      await this.prismaClient.message.findMany({ where: { conversationId: model.conversationId } });
 
     const newMessage: Message = await this.prismaClient.message.create({
       data: {
-        content: message.content,
-        conversationId: message.conversationId,
+        content: model.content,
+        conversationId: model.conversationId,
         role: Roles.USER
       }
     });
@@ -43,7 +43,7 @@ export default class AssistantService extends BaseService {
     const response: Message = await this.prismaClient.message.create({
       data: {
         content: completion,
-        conversationId: message.conversationId,
+        conversationId: model.conversationId,
         role: Roles.ASSISTANT
       }
     });
