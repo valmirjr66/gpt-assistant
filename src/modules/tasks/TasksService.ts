@@ -1,10 +1,10 @@
 import { Injectable, Optional } from '@nestjs/common';
 import BlobManager from 'src/blob/BlobManager';
-import GetTasksResponseModel from 'src/model/GetTasksResponseModel';
-import InsertTaskRequestModel from 'src/model/InsertTaskRequestModel';
-import InsertTaskResponseModel from 'src/model/InsertTaskResponseModel';
+import GetTasksResponseModel from 'src/modules/tasks/model/GetTasksResponseModel';
+import InsertTaskRequestModel from 'src/modules/tasks/model/InsertTaskRequestModel';
+import InsertTaskResponseModel from 'src/modules/tasks/model/InsertTaskResponseModel';
 import { TaskCategory } from 'src/types/tasks';
-import BaseService from './BaseService';
+import BaseService from '../../BaseService';
 
 @Injectable()
 export default class TasksService extends BaseService {

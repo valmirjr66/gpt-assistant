@@ -6,11 +6,11 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
-import GetTasksResponseDto from 'src/dto/GetTasksResponseDto';
-import InsertTaskRequestDto from 'src/dto/InsertTaskRequestDto';
-import InsertTaskResponseDto from 'src/dto/InsertTaskResponseDto';
-import TasksService from 'src/service/TasksService';
-import BaseController from './BaseController';
+import GetTasksResponseDto from 'src/modules/tasks/dto/GetTasksResponseDto';
+import InsertTaskRequestDto from 'src/modules/tasks/dto/InsertTaskRequestDto';
+import InsertTaskResponseDto from 'src/modules/tasks/dto/InsertTaskResponseDto';
+import BaseController from '../../BaseController';
+import TasksService from './TasksService';
 
 @ApiTags('Tasks')
 @Controller('tasks')

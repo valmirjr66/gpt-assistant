@@ -6,11 +6,11 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
-import GetConversationResponseDto from 'src/dto/GetConversationResponseDto';
-import InsertMessageRequestDto from 'src/dto/InsertMessageRequestDto';
-import InsertMessageResponseDto from 'src/dto/InsertMessageResponseDto';
-import AssistantService from 'src/service/AssistantService';
-import BaseController from './BaseController';
+import InsertMessageRequestDto from 'src/modules/assistant/dto/InsertMessageRequestDto';
+import BaseController from '../../BaseController';
+import AssistantService from './AssistantService';
+import GetConversationResponseDto from './dto/GetConversationResponseDto';
+import InsertMessageResponseDto from './dto/InsertMessageResponseDto';
 
 @ApiTags('Assistant')
 @Controller('assistant')

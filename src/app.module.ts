@@ -1,13 +1,8 @@
 import { Module } from '@nestjs/common';
-import AssistantController from './controller/AssistantController';
-import TasksController from './controller/TasksController';
-import TaskCategoryIdExistValidator from './dto/validator/TaskCategoryIdExistValidator';
-import AssistantService from './service/AssistantService';
-import TasksService from './service/TasksService';
+import { AssistantModule } from './assistant.module';
+import { TasksModule } from './tasks.module';
 
 @Module({
-    imports: [],
-    controllers: [AssistantController, TasksController],
-    providers: [AssistantService, TasksService, TaskCategoryIdExistValidator],
+    imports: [AssistantModule, TasksModule],
 })
 export class AppModule {}
