@@ -4,7 +4,7 @@ import {
     ValidatorConstraint,
     ValidatorConstraintInterface,
 } from 'class-validator';
-import BlobManager from 'src/blob/BlobManager';
+import BlobManager from 'src/handlers/blob/BlobManager';
 
 @ValidatorConstraint({ name: 'TaskCategoryExistValidator', async: true })
 @Injectable()

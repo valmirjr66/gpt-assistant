@@ -1,5 +1,5 @@
 import { Injectable, Optional } from '@nestjs/common';
-import BlobManager from 'src/blob/BlobManager';
+import BlobManager from 'src/handlers/blob/BlobManager';
 import GetTasksResponseModel from 'src/modules/tasks/model/GetTasksResponseModel';
 import InsertTaskRequestModel from 'src/modules/tasks/model/InsertTaskRequestModel';
 import InsertTaskResponseModel from 'src/modules/tasks/model/InsertTaskResponseModel';

@@ -6,4 +6,4 @@ import AssistantService from './modules/assistant/AssistantService';
     controllers: [AssistantController],
     providers: [AssistantService],
 })
-export class AssistantModule { }
+export class AssistantModule {}

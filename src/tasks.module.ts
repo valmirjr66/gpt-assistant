@@ -4,7 +4,7 @@ import TasksController from './modules/tasks/TasksController';
 import TasksService from './modules/tasks/TasksService';
 
 @Module({
-  controllers: [TasksController],
-  providers: [TasksService, TaskCategoryIdExistValidator],
+    controllers: [TasksController],
+    providers: [TasksService, TaskCategoryIdExistValidator],
 })
-export class TasksModule { }
+export class TasksModule {}

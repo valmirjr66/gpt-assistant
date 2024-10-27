@@ -1,7 +1,7 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { ASSISTANT_DESCRIPTION } from 'src/constants/GptSetup';
 import { Roles } from 'src/enum/gpt';
-import ChatAgent from 'src/gpt/ChatAgent';
+import ChatAgent from 'src/handlers/gpt/ChatAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
 import InsertMessageRequestModel from 'src/modules/assistant/model/InsertMessageRequestModel';
 import InsertMessageResponseModel from 'src/modules/assistant/model/InsertMessageResponseModel';
