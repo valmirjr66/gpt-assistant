@@ -1,7 +1,9 @@
-import { IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, MaxLength, MinLength, Validate } from 'class-validator';
+import TaskCategoryIdExistValidator from './validator/TaskCategoryIdExistValidator';
 
 export default class InsertTaskRequestDto {
-    @IsUUID()
+    @IsNotEmpty()
+    @Validate(TaskCategoryIdExistValidator)
     categoryId: string;
 
     @MinLength(3)

@@ -1,7 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import fs from 'fs-extra';
 
-@Injectable()
 export default class BlobManager {
     private readonly basePath: string = process.env.BASE_BLOB_PATH;
 
