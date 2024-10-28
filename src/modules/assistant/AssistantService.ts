@@ -24,7 +24,7 @@ export default class AssistantService extends BaseService {
         id: string,
     ): Promise<GetConversationResponseModel> {
         const conversationMessages: Message[] =
-            await this.prismaClient.message.findMany({
+            await this.prismaClient.messages.findMany({
                 where: { conversationId: id },
             });
 
@@ -40,11 +40,11 @@ export default class AssistantService extends BaseService {
         model: InsertMessageRequestModel,
     ): Promise<InsertMessageResponseModel> {
         const conversationMessages: Message[] =
-            await this.prismaClient.message.findMany({
+            await this.prismaClient.messages.findMany({
                 where: { conversationId: model.conversationId },
             });
 
-        const newMessage: Message = await this.prismaClient.message.create({
+        const newMessage: Message = await this.prismaClient.messages.create({
             data: {
                 content: model.content,
                 conversationId: model.conversationId,
@@ -57,7 +57,7 @@ export default class AssistantService extends BaseService {
         const completion =
             await this.chatAgent.createCompletion(conversationMessages);
 
-        const response: Message = await this.prismaClient.message.create({
+        const response: Message = await this.prismaClient.messages.create({
             data: {
                 content: completion,
                 conversationId: model.conversationId,
