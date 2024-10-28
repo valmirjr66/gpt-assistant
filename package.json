@@ -16,7 +16,7 @@
     "prisma:push": "npx prisma db push",
     "prisma:generate": "npx prisma generate",
     "test": "jest",
-    "setup:storage": "mkdir storage && cp storage-example/. storage/."
+    "setup:local-storage": "mkdir storage && cp storage-example/. storage/."
   },
   "dependencies": {
     "@google-cloud/storage": "^7.13.0",
