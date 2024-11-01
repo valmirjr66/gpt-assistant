@@ -28,7 +28,7 @@ async function bootstrap() {
         customCss: swaggerDarkTheme,
     });
 
-    const apiPort = process.env.API_PORT || 4000;
+    const apiPort = process.env.API_PORT || 8080;
 
     await app.listen(apiPort);
 
