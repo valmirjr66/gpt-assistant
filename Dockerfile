@@ -21,4 +21,6 @@ RUN yarn install --frozen-lockfile && yarn cache clean
 RUN npx prisma generate
 COPY --from=build /usr/src/app/src ./src
 COPY --from=build /usr/src/app/dist ./dist
+EXPOSE 8080
+EXPOSE 4000
 CMD [ "node", "dist/main.js" ]
