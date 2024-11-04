@@ -1,10 +1,11 @@
-type Role = 'system' | 'user' | 'assistant';
+type Role = 'system' | 'user' | 'assistant' | 'tool';
 
 type Message = {
     id: string;
     conversationId: string;
     role: Role;
     content: string;
+    toolCallId?: string;
 };
 
 type Conversation = {

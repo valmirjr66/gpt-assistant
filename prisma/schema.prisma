@@ -14,11 +14,13 @@ enum Role {
   system
   user
   assistant
+  tool
 }
 
 model Messages {
-  id    String  @id @map("_id") @default(uuid())
+  id String @id @map("_id") @default(uuid())
   content String
   role Role
   conversationId String
+  toolCallId String?
 }
