@@ -27,7 +27,13 @@ export default class AssistantService extends BaseService {
     ): Promise<GetConversationResponseModel> {
         const conversationMessages: Message[] =
             await this.prismaClient.messages.findMany({
-                where: { conversationId: id },
+                where: {
+                    conversationId: id,
+                    AND: {
+                        NOT: { role: 'tool' },
+                        OR: [{ NOT: { content: null } }],
+                    },
+                },
             });
 
         const conversation = new GetConversationResponseModel(
