@@ -1,4 +1,4 @@
-export default class InsertMessageRequestDto {
+export default class SendMessageRequestDto {
     content: string;
     conversationId: string;
 

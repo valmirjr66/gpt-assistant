@@ -3,8 +3,8 @@ import { YOKO_SETUP } from 'src/constants/AssistantsSetup';
 import { Roles } from 'src/enum/gpt';
 import ChatAgent, { TextResponse } from 'src/handlers/gpt/ChatAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
-import InsertMessageRequestModel from 'src/modules/assistant/model/InsertMessageRequestModel';
-import InsertMessageResponseModel from 'src/modules/assistant/model/InsertMessageResponseModel';
+import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequestModel';
+import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageResponseModel';
 import { Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import methodsBoard from './MethodsBoard';
@@ -44,9 +44,9 @@ export default class AssistantService extends BaseService {
         return conversation;
     }
 
-    async insertMessage(
-        model: InsertMessageRequestModel,
-    ): Promise<InsertMessageResponseModel> {
+    async sendMessage(
+        model: SendMessageRequestModel,
+    ): Promise<SendMessageResponseModel> {
         const conversationSoFar: Message[] =
             await this.prismaClient.messages.findMany({
                 where: { conversationId: model.conversationId },
@@ -75,7 +75,7 @@ export default class AssistantService extends BaseService {
                 },
             });
 
-            return new InsertMessageResponseModel(
+            return new SendMessageResponseModel(
                 response.id,
                 response.content,
                 response.role,
@@ -129,7 +129,7 @@ export default class AssistantService extends BaseService {
                     },
                 });
 
-            return new InsertMessageResponseModel(
+            return new SendMessageResponseModel(
                 assistantResponse.id,
                 assistantResponse.content,
                 assistantResponse.role,

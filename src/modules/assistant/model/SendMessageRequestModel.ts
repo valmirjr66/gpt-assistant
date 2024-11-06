@@ -1,4 +1,4 @@
-export default class InsertMessageRequestModel {
+export default class SendMessageRequestModel {
     content: string;
     conversationId: string;
 

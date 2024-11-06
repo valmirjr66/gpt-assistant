@@ -6,11 +6,11 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
-import InsertMessageRequestDto from 'src/modules/assistant/dto/InsertMessageRequestDto';
+import SendMessageRequestDto from 'src/modules/assistant/dto/SendMessageRequestDto';
 import BaseController from '../../BaseController';
 import AssistantService from './AssistantService';
 import GetConversationResponseDto from './dto/GetConversationResponseDto';
-import InsertMessageResponseDto from './dto/InsertMessageResponseDto';
+import SendMessageResponseDto from './dto/SendMessageResponseDto';
 
 @ApiTags('Assistant')
 @Controller('assistant')
@@ -39,10 +39,10 @@ export default class AssistantController extends BaseController {
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
-    async insertMessage(
-        @Body() dto: InsertMessageRequestDto,
-    ): Promise<InsertMessageResponseDto> {
-        const response = await this.assistantService.insertMessage(dto);
+    async sendMessage(
+        @Body() dto: SendMessageRequestDto,
+    ): Promise<SendMessageResponseDto> {
+        const response = await this.assistantService.sendMessage(dto);
         return response;
     }
 }
