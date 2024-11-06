@@ -18,9 +18,15 @@ enum Role {
 }
 
 model Messages {
-  id String @id @map("_id") @default(uuid())
-  content String
-  role Role
+  id             String @id @default(uuid()) @map("_id")
+  content        String?
+  role           Role
   conversationId String
-  toolCallId String?
+  toolCall       ToolCall?
+}
+
+type ToolCall {
+  id                String
+  functionName      String
+  functionArguments String
 }
