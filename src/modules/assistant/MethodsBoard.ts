@@ -89,26 +89,37 @@ const methodsBoard: MethodsBoard = [
                     properties: {
                         monday: {
                             type: 'string',
-                            description: 'The post idea description planned to be posted on Monday',
+                            description:
+                                'The post idea description planned to be posted on Monday',
                         },
                         tuesday: {
                             type: 'string',
-                            description: 'The post idea description planned to be posted on Tuesday',
+                            description:
+                                'The post idea description planned to be posted on Tuesday',
                         },
                         wednesday: {
                             type: 'string',
-                            description: 'The post idea description planned to be posted on Wednesday',
+                            description:
+                                'The post idea description planned to be posted on Wednesday',
                         },
                         thursday: {
                             type: 'string',
-                            description: 'The post idea description planned to be posted on Thursday',
+                            description:
+                                'The post idea description planned to be posted on Thursday',
                         },
                         friday: {
                             type: 'string',
-                            description: 'The post idea description planned to be posted on Friday',
+                            description:
+                                'The post idea description planned to be posted on Friday',
                         },
                     },
-                    required: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+                    required: [
+                        'monday',
+                        'tuesday',
+                        'wednesday',
+                        'thursday',
+                        'friday',
+                    ],
                     additionalProperties: false,
                 },
             },
