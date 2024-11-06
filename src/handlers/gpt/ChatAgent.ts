@@ -2,16 +2,22 @@ import OpenAI from 'openai';
 import { ChatCompletionMessageToolCall } from 'openai/resources/index.mjs';
 import { ChatCompletionMessageParam } from 'openai/src/resources/index.js';
 import { MethodsBoard } from 'src/modules/assistant/MethodsBoard';
-import { Message } from 'src/types/gpt';
+import { Action, Message } from 'src/types/gpt';
 
 export class MethodResponse {
-    constructor(toolCall: ChatCompletionMessageToolCall, response: string) {
+    constructor(
+        toolCall: ChatCompletionMessageToolCall,
+        response: string,
+        actions: Action[] = [],
+    ) {
         this.toolCall = toolCall;
         this.response = response;
+        this.actions = actions;
     }
 
     toolCall: ChatCompletionMessageToolCall;
     response: string;
+    actions: Action[];
 }
 
 export class TextResponse {
@@ -91,12 +97,12 @@ export default class ChatAgent {
             );
 
             if (configuredMethod) {
-                const response = JSON.stringify(
-                    await configuredMethod.callback(params),
-                );
+                const methodResponse = await configuredMethod.callback(params);
+
                 return new MethodResponse(
                     completion.choices[0].message.tool_calls[0],
-                    response,
+                    JSON.stringify(methodResponse.data),
+                    methodResponse.actions,
                 );
             }
 

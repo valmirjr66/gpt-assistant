@@ -125,6 +125,7 @@ export default class AssistantService extends BaseService {
                         content: followUpCompletion.content,
                         conversationId: model.conversationId,
                         role: 'assistant',
+                        actions: completion.actions,
                     },
                 });
 
@@ -133,6 +134,7 @@ export default class AssistantService extends BaseService {
                 assistantResponse.content,
                 assistantResponse.role,
                 assistantResponse.conversationId,
+                assistantResponse.actions,
             );
         }
     }
