@@ -17,16 +17,28 @@ enum Role {
   tool
 }
 
-model Messages {
-  id             String @id @default(uuid()) @map("_id")
-  content        String?
-  role           Role
-  conversationId String
-  toolCall       ToolCall?
+enum ActionType {
+  positive
+  negative
 }
 
 type ToolCall {
   id                String
   functionName      String
   functionArguments String
+}
+
+type Action {
+  type             ActionType
+  feedbackResponse String
+  chosen           Boolean
+}
+
+model Messages {
+  id             String    @id @default(uuid()) @map("_id")
+  content        String?
+  role           Role
+  conversationId String
+  toolCall       ToolCall?
+  actions        Action[]
 }

@@ -1,22 +1,28 @@
-type Role = 'system' | 'user' | 'assistant' | 'tool';
+export type Role = 'system' | 'user' | 'assistant' | 'tool';
+export type ActionType = 'positive' | 'negative'
 
-type ToolCall = {
+export type ToolCall = {
     id: string;
     functionName: string;
     functionArguments: string;
 };
 
-type Message = {
+export type Action = {
+    type: ActionType,
+    feedbackResponse: string
+    chosen: boolean
+}
+
+export type Message = {
     id: string;
     conversationId: string;
     role: Role;
     content?: string;
     toolCall?: ToolCall;
+    actions: Action[]
 };
 
-type Conversation = {
+export type Conversation = {
     id: string;
     messages: Message[];
 };
-
-export { Conversation, Message, Role };
