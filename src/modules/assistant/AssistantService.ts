@@ -1,6 +1,5 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { YOKO_SETUP } from 'src/constants/AssistantsSetup';
-import { Roles } from 'src/enum/gpt';
 import ChatAgent, { TextResponse } from 'src/handlers/gpt/ChatAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
 import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequestModel';
@@ -57,7 +56,7 @@ export default class AssistantService extends BaseService {
                 data: {
                     content: model.content,
                     conversationId: model.conversationId,
-                    role: Roles.USER,
+                    role: 'user'
                 },
             });
 
@@ -71,7 +70,7 @@ export default class AssistantService extends BaseService {
                 data: {
                     content: completion.content,
                     conversationId: model.conversationId,
-                    role: Roles.ASSISTANT,
+                    role: 'assistant'
                 },
             });
 
@@ -86,7 +85,7 @@ export default class AssistantService extends BaseService {
                 await this.prismaClient.messages.create({
                     data: {
                         conversationId: model.conversationId,
-                        role: Roles.ASSISTANT,
+                        role: 'assistant',
                         toolCall: {
                             id: completion.toolCall.id,
                             functionName: completion.toolCall.function.name,
@@ -103,7 +102,7 @@ export default class AssistantService extends BaseService {
                     data: {
                         content: completion.response,
                         conversationId: model.conversationId,
-                        role: Roles.TOOL,
+                        role: 'tool',
                         toolCall: {
                             id: completion.toolCall.id,
                             functionName: completion.toolCall.function.name,
@@ -125,7 +124,7 @@ export default class AssistantService extends BaseService {
                     data: {
                         content: followUpCompletion.content,
                         conversationId: model.conversationId,
-                        role: Roles.ASSISTANT,
+                        role: 'assistant',
                     },
                 });
 
