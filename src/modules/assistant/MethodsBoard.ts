@@ -35,7 +35,7 @@ const methodsBoard: MethodsBoard = [
         },
         callback: async (args: { topics: string }) => {
             const dummyAgent = new SimpleAgent(
-                'You are a virtual assistant focused on creating posts ideas',
+                'Você é um assistente virtual foacado na criação de ideias de post'
             );
             const postIdeas: string[] = [];
             const splittedTopics = args.topics.split(',');
