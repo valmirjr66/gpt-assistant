@@ -33,7 +33,7 @@ export default class AssistantController extends BaseController {
         return response;
     }
 
-    @Post('/chat/message')
+    @Post('/conversation/message')
     @ApiOkResponse({ description: ResponseDescriptions.CREATED })
     @ApiNotFoundResponse({ description: ResponseDescriptions.BAD_REQUEST })
     @ApiInternalServerErrorResponse({
