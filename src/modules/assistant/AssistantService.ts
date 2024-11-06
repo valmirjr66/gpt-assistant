@@ -56,7 +56,7 @@ export default class AssistantService extends BaseService {
                 data: {
                     content: model.content,
                     conversationId: model.conversationId,
-                    role: 'user'
+                    role: 'user',
                 },
             });
 
@@ -70,7 +70,7 @@ export default class AssistantService extends BaseService {
                 data: {
                     content: completion.content,
                     conversationId: model.conversationId,
-                    role: 'assistant'
+                    role: 'assistant',
                 },
             });
 

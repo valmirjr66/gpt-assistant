@@ -1,5 +1,5 @@
 export type Role = 'system' | 'user' | 'assistant' | 'tool';
-export type ActionType = 'positive' | 'negative'
+export type ActionType = 'positive' | 'negative';
 
 export type ToolCall = {
     id: string;
@@ -8,10 +8,10 @@ export type ToolCall = {
 };
 
 export type Action = {
-    type: ActionType,
-    feedbackResponse: string
-    chosen: boolean
-}
+    type: ActionType;
+    feedbackResponse: string;
+    chosen: boolean;
+};
 
 export type Message = {
     id: string;
@@ -19,7 +19,7 @@ export type Message = {
     role: Role;
     content?: string;
     toolCall?: ToolCall;
-    actions: Action[]
+    actions: Action[];
 };
 
 export type Conversation = {
