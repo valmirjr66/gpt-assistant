@@ -13,3 +13,5 @@ yarn-error.*
 
 # Jest coverage report
 **/coverage
+
+**/calendar.json
