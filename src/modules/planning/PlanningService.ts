@@ -34,11 +34,11 @@ export default class PlanningService extends BaseService {
         month: number,
         day: number,
     ): Promise<GetByDateResponseModel> {
-        const selectedYear = calendar[year];
-        const selectedMonth = selectedYear[month];
-        const selectedDay: string[] = selectedMonth[day];
+        const selectedYear = calendar?.[year];
+        const selectedMonth = selectedYear?.[month];
+        const selectedDay: string[] = selectedMonth?.[day];
 
-        const response = new GetByDateResponseModel(selectedDay);
+        const response = new GetByDateResponseModel(selectedDay ?? []);
 
         return Promise.resolve(response);
     }
