@@ -39,20 +39,23 @@ const methodsBoard: MethodsBoard = [
                 'Você é um assistente virtual foacado na criação de ideias de post',
             );
             const postIdeas: string[] = [];
-            const splittedTopics = args.topics.split(',');
+            let splittedTopics = args.topics.split(',');
+
+            if (splittedTopics.length > 5) splittedTopics = splittedTopics
 
             while (splittedTopics.length < 5) {
                 const randomTopic = getRandomItemFromArray(splittedTopics);
                 splittedTopics.push(randomTopic);
             }
 
-            for (const topic of splittedTopics) {
-                const completion = await dummyAgent.createCompletion(
-                    `Suggest me a single post idea regarding following topic: ${topic}`,
-                );
-                postIdeas.push(completion);
-                if (postIdeas.length === 5) break;
-            }
+            await Promise.all(
+                splittedTopics.map(async (topic) => {
+                    const completion = await dummyAgent.createCompletion(
+                        `Suggest me a single post idea regarding following topic: ${topic}`,
+                    );
+                    postIdeas.push(completion);
+                })
+            )
 
             return {
                 data: {
