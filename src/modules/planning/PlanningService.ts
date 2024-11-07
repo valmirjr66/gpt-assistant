@@ -35,9 +35,9 @@ export default class PlanningService extends BaseService {
         const calendar = JSON.parse(calendarStr);
 
         const selectedYear = calendar[year];
-        const selectedMonth: Record<string, string[]> = selectedYear[month];
+        const selectedMonth: Record<string, string[]> = selectedYear?.[month];
 
-        const response = new GetEntriesByYearAndMonthResponseModel(selectedMonth);
+        const response = new GetEntriesByYearAndMonthResponseModel(selectedMonth ?? {});
 
         return Promise.resolve(response);
     }
