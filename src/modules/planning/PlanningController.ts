@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import {
     ApiInternalServerErrorResponse,
     ApiOkResponse,
@@ -8,8 +8,10 @@ import ResponseDescriptions from 'src/constants/ResponseDescriptions';
 import GetAllResponseDto from 'src/modules/planning/dto/GetAllResponseDto';
 import BaseController from '../../BaseController';
 import PlanningService from './PlanningService';
-import GetByYearAndMonthResponseDto from './dto/GetByYearAndMonthResponseDto';
 import GetByDateResponseDto from './dto/GetByDateResponseDto';
+import GetByYearAndMonthResponseDto from './dto/GetByYearAndMonthResponseDto';
+import InsertEntryResponseDto from './dto/InsertEntryResponseDto';
+import InsertEntryRequestDto from './dto/InsertEntryRequestDto';
 
 @ApiTags('Planning')
 @Controller('planning')
@@ -23,8 +25,8 @@ export default class PlanningController extends BaseController {
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
-    async getAll(): Promise<GetAllResponseDto> {
-        const response = await this.planningService.getAll();
+    async getAllEntries(): Promise<GetAllResponseDto> {
+        const response = await this.planningService.getAllEntries();
         this.validateGetResponse(response);
         return response;
     }
@@ -34,11 +36,11 @@ export default class PlanningController extends BaseController {
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
-    async getByYearAndMonth(
+    async getEntriesByYearAndMonth(
         @Param('year') year: number,
         @Param('month') month: number,
     ): Promise<GetByYearAndMonthResponseDto> {
-        const response = await this.planningService.getByYearAndMonth(
+        const response = await this.planningService.getEntriesByYearAndMonth(
             year,
             month,
         );
@@ -51,13 +53,28 @@ export default class PlanningController extends BaseController {
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
-    async getByDate(
+    async getEntriesByDate(
         @Param('year') year: number,
         @Param('month') month: number,
         @Param('day') day: number,
     ): Promise<GetByDateResponseDto> {
-        const response = await this.planningService.getByDate(year, month, day);
+        const response = await this.planningService.getEntriesByDate(year, month, day);
         this.validateGetResponse(response);
+        return response;
+    }
+
+    @Post('/:year/:month/:day')
+    @ApiOkResponse({ description: ResponseDescriptions.OK })
+    @ApiInternalServerErrorResponse({
+        description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+    })
+    async saveEntry(
+        @Param('year') year: number,
+        @Param('month') month: number,
+        @Param('day') day: number,
+        @Body() dto: InsertEntryRequestDto
+    ): Promise<InsertEntryResponseDto> {
+        const response = await this.planningService.saveEntry(year, month, day, dto.entries);
         return response;
     }
 }
