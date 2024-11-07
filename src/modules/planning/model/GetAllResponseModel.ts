@@ -1,4 +1,4 @@
-export default class GetPlanningResponseDto {
+export default class GetAllResponseModel {
     items: Record<string, Record<string, Record<string, string[]>>>;
 
     constructor(

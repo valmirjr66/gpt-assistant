@@ -1,14 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import {
     ApiInternalServerErrorResponse,
-    ApiNoContentResponse,
     ApiOkResponse,
     ApiTags,
 } from '@nestjs/swagger';
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
-import GetPlanningResponseDto from 'src/modules/planning/dto/GetPlanningResponseDto';
+import GetAllResponseDto from 'src/modules/planning/dto/GetAllResponseDto';
 import BaseController from '../../BaseController';
 import PlanningService from './PlanningService';
+import GetByYearAndMonthResponseDto from './dto/GetByYearAndMonthResponseDto';
 
 @ApiTags('Planning')
 @Controller('planning')
@@ -19,12 +19,28 @@ export default class PlanningController extends BaseController {
 
     @Get()
     @ApiOkResponse({ description: ResponseDescriptions.OK })
-    @ApiNoContentResponse({ description: ResponseDescriptions.NO_CONTENT })
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
-    async getAll(): Promise<GetPlanningResponseDto> {
+    async getAll(): Promise<GetAllResponseDto> {
         const response = await this.planningService.getAll();
+        this.validateGetResponse(response);
+        return response;
+    }
+
+    @Get('/:year/:month')
+    @ApiOkResponse({ description: ResponseDescriptions.OK })
+    @ApiInternalServerErrorResponse({
+        description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+    })
+    async getByYearAndMonth(
+        @Param('year') year: number,
+        @Param('month') month: number,
+    ): Promise<GetByYearAndMonthResponseDto> {
+        const response = await this.planningService.getByYearAndMonth(
+            year,
+            month,
+        );
         this.validateGetResponse(response);
         return response;
     }

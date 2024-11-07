@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import GetPlanningResponseModel from 'src/modules/planning/model/GetPlanningResponseModel';
+import GetAllResponseModel from 'src/modules/planning/model/GetAllResponseModel';
 import BaseService from '../../BaseService';
 import calendar from './calendar.json';
+import GetByYearAndMonthResponseModel from './model/GetByYearAndMonthResponseModel';
 
 @Injectable()
 export default class PlanningService extends BaseService {
@@ -9,8 +10,20 @@ export default class PlanningService extends BaseService {
         super();
     }
 
-    async getAll(): Promise<GetPlanningResponseModel> {
-        const response: GetPlanningResponseModel = { items: calendar };
+    async getAll(): Promise<GetAllResponseModel> {
+        const response: GetAllResponseModel = { items: calendar };
+
+        return Promise.resolve(response);
+    }
+
+    async getByYearAndMonth(
+        year: number,
+        month: number,
+    ): Promise<GetByYearAndMonthResponseModel> {
+        const selectedYear = calendar[year];
+        const selectedMonth: Record<string, string[]> = selectedYear[month];
+
+        const response = new GetByYearAndMonthResponseModel(selectedMonth);
 
         return Promise.resolve(response);
     }
