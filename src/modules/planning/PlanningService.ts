@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import GetPlanningResponseModel from 'src/modules/planning/model/GetPlanningResponseModel';
 import BaseService from '../../BaseService';
+import calendar from './calendar.json';
 
 @Injectable()
 export default class PlanningService extends BaseService {
@@ -9,18 +10,7 @@ export default class PlanningService extends BaseService {
     }
 
     async getAll(): Promise<GetPlanningResponseModel> {
-        const response: GetPlanningResponseModel = {
-            items: {
-                '2024-11-20': [
-                    'Sample text 1',
-                    'Sample text 2',
-                    'Sample text 3',
-                ],
-                '2024-11-25': [
-                    'That is a larger sample text intended to verify the concept',
-                ],
-            },
-        };
+        const response: GetPlanningResponseModel = { items: calendar };
 
         return Promise.resolve(response);
     }

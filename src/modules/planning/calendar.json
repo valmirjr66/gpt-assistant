@@ -1,0 +1,23 @@
+{
+  "2024": {
+    "11": {
+      "20": [
+        "Sample text 1",
+        "Sample text 2",
+        "Sample text 3"
+      ]
+    },
+    "12": {
+      "25": [
+        "That is a larger sample text intended to verify the concept"
+      ]
+    }
+  },
+  "2025": {
+    "1": {
+      "15": [
+        "Roses are red, violets are blue ✨"
+      ]
+    }
+  }
+}
