@@ -1,3 +1,5 @@
+import axios from 'axios';
+import moment from 'moment';
 import { ChatCompletionTool } from 'openai/resources/index.mjs';
 import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 import { Action } from 'src/types/gpt';
@@ -134,7 +136,33 @@ const methodsBoard: MethodsBoard = [
             thursday: string;
             friday: string;
         }) => {
-            console.log(args);
+            const nextMonday = moment().day(1);
+
+            // If the day has already passed this 
+            // week then move to next week
+            if (moment().day() >= 5) {
+                nextMonday.add(7, 'days');
+            }
+
+            let failedSome = false;
+
+            await Promise.all(
+                [args.monday, args.tuesday, args.wednesday, args.thursday, args.friday].map(async dayOfTheWeek => {
+                    try {
+                        const response =
+                            await axios.post(`${process.env.CLOUD_API_ADDRESS}/planning/${nextMonday.year()}/${nextMonday.month() + 1}/${nextMonday.day()}`,
+                                { entries: [dayOfTheWeek] });
+
+                        if (response.data.status !== 'ok')
+                            failedSome = true
+                    } catch (err) {
+                        return { data: { error: "Error while trying to save" } }
+                    }
+                })
+            )
+
+            if (failedSome) return { data: 'Something went wrong' }
+
             return { data: 'Content saved!' };
         },
     },

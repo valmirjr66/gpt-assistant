@@ -10,6 +10,7 @@ import InsertEntryResponseModel from './model/InsertEntryResponseModel';
 @Injectable()
 export default class PlanningService extends BaseService {
     private readonly blobManager: BlobManagerInterface;
+    private readonly calendar: Record<string, Record<string, Record<string, string[]>>> = { "2024": { "11": { "08": ["Testandoooo"] } } };
 
     constructor() {
         super();
@@ -17,11 +18,11 @@ export default class PlanningService extends BaseService {
     }
 
     async getAllEntries(): Promise<GetAllEntriesResponseModel> {
-        const calendarBuffer = await this.blobManager.read("calendar.json");
-        const calendarStr = calendarBuffer.toString('binary');
-        const calendar = JSON.parse(calendarStr);
+        // const calendarBuffer = await this.blobManager.read("calendar.json");
+        // const calendarStr = calendarBuffer.toString('binary');
+        // const calendar = JSON.parse(calendarStr);
 
-        const response: GetAllEntriesResponseModel = { items: calendar };
+        const response: GetAllEntriesResponseModel = { items: this.calendar };
 
         return Promise.resolve(response);
     }
@@ -30,11 +31,11 @@ export default class PlanningService extends BaseService {
         year: number,
         month: number,
     ): Promise<GetEntriesByYearAndMonthResponseModel> {
-        const calendarBuffer = await this.blobManager.read("calendar.json");
-        const calendarStr = calendarBuffer.toString('binary');
-        const calendar = JSON.parse(calendarStr);
+        // const calendarBuffer = await this.blobManager.read("calendar.json");
+        // const calendarStr = calendarBuffer.toString('binary');
+        // const calendar = JSON.parse(calendarStr);
 
-        const selectedYear = calendar[year];
+        const selectedYear = this.calendar[year];
         const selectedMonth: Record<string, string[]> = selectedYear?.[month];
 
         const response = new GetEntriesByYearAndMonthResponseModel(selectedMonth ?? {});
@@ -47,11 +48,11 @@ export default class PlanningService extends BaseService {
         month: number,
         day: number,
     ): Promise<GetEntryByDateResponseModel> {
-        const calendarBuffer = await this.blobManager.read("calendar.json");
-        const calendarStr = calendarBuffer.toString('binary');
-        const calendar = JSON.parse(calendarStr);
+        // const calendarBuffer = await this.blobManager.read("calendar.json");
+        // const calendarStr = calendarBuffer.toString('binary');
+        // const calendar = JSON.parse(calendarStr);
 
-        const selectedYear = calendar?.[year];
+        const selectedYear = this.calendar?.[year];
         const selectedMonth = selectedYear?.[month];
         const selectedDay: string[] = selectedMonth?.[day];
 
@@ -66,37 +67,15 @@ export default class PlanningService extends BaseService {
         day: number,
         entries: string[]
     ): Promise<InsertEntryResponseModel> {
-        const CALENDAR_FILE_NAME = "calendar.json";
+        // const CALENDAR_FILE_NAME = "calendar.json";
 
-        const calendarBuffer = await this.blobManager.read(CALENDAR_FILE_NAME);
-        const calendarStr = calendarBuffer.toString('binary');
-        const calendar
-            = JSON.parse(calendarStr);
+        // const calendarBuffer = await this.blobManager.read(CALENDAR_FILE_NAME);
+        // const calendarStr = calendarBuffer.toString('binary');
+        // const calendar = JSON.parse(calendarStr);
 
-        const selectedYear = calendar?.[year];
+        this.calendar[year][month][day] = entries;
 
-        if (selectedYear) {
-            const selectedMonth = selectedYear?.[month];
-
-            if (selectedMonth) {
-                const selectedDay = selectedMonth?.[day]
-
-                if (selectedDay) {
-                    calendar[year][month][day] = [...selectedDay, ...entries]
-                } else {
-                    calendar[year][month][day] = entries
-                }
-            } else {
-                calendar[year][month] = { [day]: entries }
-            }
-        } else {
-            calendar[year] = { [month]: { [day]: entries } }
-        }
-
-        const newCalendarBuffer = Buffer.from(JSON.stringify(calendar), 'binary')
-
-        await this.blobManager.write(CALENDAR_FILE_NAME, newCalendarBuffer);
-
+        console.log(this.calendar)
         // It wouldn't be ok of the file was already locked by a mutex for example
         const response = new InsertEntryResponseModel("ok");
 
