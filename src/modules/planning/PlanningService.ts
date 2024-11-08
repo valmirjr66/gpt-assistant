@@ -10,11 +10,14 @@ import InsertEntryResponseModel from './model/InsertEntryResponseModel';
 @Injectable()
 export default class PlanningService extends BaseService {
     private readonly blobManager: BlobManagerInterface;
-    private readonly calendar: Record<string, Record<string, Record<string, string[]>>> = { "2024": { "11": { "08": ["Testandoooo"] } } };
+    private readonly calendar: Record<
+        string,
+        Record<string, Record<string, string[]>>
+    > = { '2024': { '11': { '08': ['Testandoooo'] } } };
 
     constructor() {
         super();
-        this.blobManager = BlobManagerFactory.createManager()
+        this.blobManager = BlobManagerFactory.createManager();
     }
 
     async getAllEntries(): Promise<GetAllEntriesResponseModel> {
@@ -38,7 +41,9 @@ export default class PlanningService extends BaseService {
         const selectedYear = this.calendar[year];
         const selectedMonth: Record<string, string[]> = selectedYear?.[month];
 
-        const response = new GetEntriesByYearAndMonthResponseModel(selectedMonth ?? {});
+        const response = new GetEntriesByYearAndMonthResponseModel(
+            selectedMonth ?? {},
+        );
 
         return Promise.resolve(response);
     }
@@ -65,7 +70,7 @@ export default class PlanningService extends BaseService {
         year: number,
         month: number,
         day: number,
-        entries: string[]
+        entries: string[],
     ): Promise<InsertEntryResponseModel> {
         // const CALENDAR_FILE_NAME = "calendar.json";
 
@@ -75,9 +80,9 @@ export default class PlanningService extends BaseService {
 
         this.calendar[year][month][day] = entries;
 
-        console.log(this.calendar)
+        console.log(this.calendar);
         // It wouldn't be ok of the file was already locked by a mutex for example
-        const response = new InsertEntryResponseModel("ok");
+        const response = new InsertEntryResponseModel('ok');
 
         return Promise.resolve(response);
     }

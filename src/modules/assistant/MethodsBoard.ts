@@ -43,7 +43,7 @@ const methodsBoard: MethodsBoard = [
             const postIdeas: string[] = [];
             let splittedTopics = args.topics.split(',');
 
-            if (splittedTopics.length > 5) splittedTopics = splittedTopics
+            if (splittedTopics.length > 5) splittedTopics = splittedTopics;
 
             while (splittedTopics.length < 5) {
                 const randomTopic = getRandomItemFromArray(splittedTopics);
@@ -56,8 +56,8 @@ const methodsBoard: MethodsBoard = [
                         `Suggest me a single post idea regarding following topic: ${topic}`,
                     );
                     postIdeas.push(completion);
-                })
-            )
+                }),
+            );
 
             return {
                 data: {
@@ -138,7 +138,7 @@ const methodsBoard: MethodsBoard = [
         }) => {
             const nextMonday = moment().day(1);
 
-            // If the day has already passed this 
+            // If the day has already passed this
             // week then move to next week
             if (moment().day() >= 5) {
                 nextMonday.add(7, 'days');
@@ -147,21 +147,29 @@ const methodsBoard: MethodsBoard = [
             let failedSome = false;
 
             await Promise.all(
-                [args.monday, args.tuesday, args.wednesday, args.thursday, args.friday].map(async dayOfTheWeek => {
+                [
+                    args.monday,
+                    args.tuesday,
+                    args.wednesday,
+                    args.thursday,
+                    args.friday,
+                ].map(async (dayOfTheWeek) => {
                     try {
-                        const response =
-                            await axios.post(`${process.env.CLOUD_API_ADDRESS}/planning/${nextMonday.year()}/${nextMonday.month() + 1}/${nextMonday.day()}`,
-                                { entries: [dayOfTheWeek] });
+                        const response = await axios.post(
+                            `${process.env.CLOUD_API_ADDRESS}/planning/${nextMonday.year()}/${nextMonday.month() + 1}/${nextMonday.day()}`,
+                            { entries: [dayOfTheWeek] },
+                        );
 
-                        if (response.data.status !== 'ok')
-                            failedSome = true
+                        if (response.data.status !== 'ok') failedSome = true;
                     } catch (err) {
-                        return { data: { error: "Error while trying to save" } }
+                        return {
+                            data: { error: 'Error while trying to save' },
+                        };
                     }
-                })
-            )
+                }),
+            );
 
-            if (failedSome) return { data: 'Something went wrong' }
+            if (failedSome) return { data: 'Something went wrong' };
 
             return { data: 'Content saved!' };
         },
