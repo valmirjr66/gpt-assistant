@@ -1,7 +1,7 @@
 export default class InsertEntryRequestDto {
-  entries: string[];
+    entries: string[];
 
-  constructor(entries: string[]) {
-    this.entries = entries;
-  }
+    constructor(entries: string[]) {
+        this.entries = entries;
+    }
 }

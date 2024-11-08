@@ -58,7 +58,11 @@ export default class PlanningController extends BaseController {
         @Param('month') month: number,
         @Param('day') day: number,
     ): Promise<GetByDateResponseDto> {
-        const response = await this.planningService.getEntriesByDate(year, month, day);
+        const response = await this.planningService.getEntriesByDate(
+            year,
+            month,
+            day,
+        );
         this.validateGetResponse(response);
         return response;
     }
@@ -72,9 +76,14 @@ export default class PlanningController extends BaseController {
         @Param('year') year: number,
         @Param('month') month: number,
         @Param('day') day: number,
-        @Body() dto: InsertEntryRequestDto
+        @Body() dto: InsertEntryRequestDto,
     ): Promise<InsertEntryResponseDto> {
-        const response = await this.planningService.saveEntry(year, month, day, dto.entries);
+        const response = await this.planningService.saveEntry(
+            year,
+            month,
+            day,
+            dto.entries,
+        );
         return response;
     }
 }
