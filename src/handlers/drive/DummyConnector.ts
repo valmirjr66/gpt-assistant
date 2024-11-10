@@ -16,20 +16,20 @@ export default class DummyConnector {
     //     '/entrevistas/relato violencia policial',
     // ];
 
-    private readonly files: string[] = [
-        'directory/document.txt',
-        'directory/video.mp4',
-        'directory/document.fake.pdf'
-    ]
+    private readonly files: Record<string, string> = {
+        'directory/document.txt': 'foobar',
+        'directory/video.mp4': '',
+        'directory/document.fake.pdf': ''
+    }
 
     constructor() { }
 
     async list(): Promise<string[]> {
-        return Promise.resolve(this.files);
+        return Promise.resolve(Object.keys(this.files));
     }
 
     async readFile(path: string): Promise<Buffer> {
-        console.log(`Reading file at ${path}`);
-        return Promise.resolve(Buffer.from('teste', 'binary'));
+        const fileContent = this.files[path]
+        return Promise.resolve(Buffer.from(fileContent, 'binary'));
     }
 }

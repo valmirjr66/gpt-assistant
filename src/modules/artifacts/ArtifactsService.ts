@@ -4,79 +4,93 @@ import BaseService from '../../BaseService';
 import TriggerArtifactsScanRequestModel from './model/TriggerArtifactsScanRequestModel';
 
 abstract class GenericFileMetadata {
-    protected readonly type: "pdf" | "doc" | "image" | "video"
-    protected readonly path: string
+    protected readonly type: 'pdf' | 'doc' | 'image' | 'video';
+    protected readonly path: string;
 
-    constructor(type: "pdf" | "doc" | "image" | "video", path: string) {
-        this.type = type
-        this.path = path
+    constructor(type: 'pdf' | 'doc' | 'image' | 'video', path: string) {
+        this.type = type;
+        this.path = path;
     }
 }
 
 class TextDocumentFile extends GenericFileMetadata {
-    readonly summary: string
+    readonly summary: string;
 
     constructor(path: string, summary: string) {
-        super("pdf", path)
-        this.summary = summary
+        super('pdf', path);
+        this.summary = summary;
     }
 }
 
 class VideoFile extends GenericFileMetadata {
-    readonly description: string
-    readonly transcription: string
+    readonly description: string;
+    readonly transcription: string;
 
     constructor(path: string, description: string, transcription: string) {
-        super("video", path)
-        this.description = description
-        this.transcription = transcription
+        super('video', path);
+        this.description = description;
+        this.transcription = transcription;
     }
 }
 
 @Injectable()
 export default class ArtifactsService extends BaseService {
     private readonly driveConnector: DummyConnector = new DummyConnector();
-    private readonly filesMetadata: GenericFileMetadata[]
+    private readonly filesMetadata: GenericFileMetadata[];
 
     constructor() {
         super();
-        this.filesMetadata = []
+        this.filesMetadata = [];
     }
 
     async triggerArtifactsScan(): Promise<TriggerArtifactsScanRequestModel> {
         const filesPaths = await this.driveConnector.list();
 
         for (const filePath of filesPaths) {
-            const fileExtension = filePath.split(".").pop()
+            const fileExtension = filePath.split('.').pop();
             const fileContent = await this.driveConnector.readFile(filePath);
 
-            if (fileExtension === "mp4") {
-                const videoDescription = await this.getVideoDescription(fileContent)
-                const videoTranscription = await this.getVideoTranscription(fileContent)
-                this.filesMetadata.push(new VideoFile(filePath, videoDescription, videoTranscription))
-            } else if (fileExtension === "txt") {
-                const documentSummary = await this.getDocumentSummary(fileContent.toString("binary"))
-                this.filesMetadata.push(new TextDocumentFile(filePath, documentSummary))
+            if (fileExtension === 'mp4') {
+                const videoDescription =
+                    await this.getVideoDescription(fileContent);
+                const videoTranscription =
+                    await this.getVideoTranscription(fileContent);
+
+                this.filesMetadata.push(
+                    new VideoFile(
+                        filePath,
+                        videoDescription,
+                        videoTranscription,
+                    ),
+                );
+            } else if (fileExtension === 'txt') {
+                const documentSummary = await this.getDocumentSummary(
+                    fileContent.toString('binary'),
+                );
+
+                this.filesMetadata.push(
+                    new TextDocumentFile(filePath, documentSummary),
+                );
             } else {
-                console.log("Not implemented")
+                console.log(`Extension not implemented: ${fileExtension}`);
             }
         }
 
         return new TriggerArtifactsScanRequestModel();
     }
 
+    async getDocumentSummary(documentContent: string): Promise<string> {
+        console.log(`Document content length is: ${documentContent.length}`);
+        return Promise.resolve('Fake summary');
+    }
+
     async getVideoDescription(videoContent: Buffer): Promise<string> {
-        console.log(`Video content length is: ${videoContent.length}`)
-        return Promise.resolve("Fake description")
+        console.log(`Video content length is: ${videoContent.length}`);
+        return Promise.resolve('Fake description');
     }
 
     async getVideoTranscription(videoContent: Buffer): Promise<string> {
-        console.log(`Video content length is: ${videoContent.length}`)
-        return Promise.resolve("Fake transcription")
-    }
-
-    async getDocumentSummary(documentContent: string): Promise<string> {
-        console.log(`Document content length is: ${documentContent.length}`)
-        return Promise.resolve("Fake summary")
+        console.log(`Video content length is: ${videoContent.length}`);
+        return Promise.resolve('Fake transcription');
     }
 }
