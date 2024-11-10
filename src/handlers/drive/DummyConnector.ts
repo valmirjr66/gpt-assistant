@@ -16,13 +16,13 @@ export default class DummyConnector {
         '/entrevistas/relato violencia policial',
     ];
 
-    constructor() {}
+    constructor() { }
 
-    list(): string[] {
+    async list(): Promise<string[]> {
         return this.files;
     }
 
-    readFile(path: string): Buffer {
+    async readFile(path: string): Promise<Buffer> {
         console.log(`Reading file at ${path}`);
         return Buffer.from('teste', 'binary');
     }
