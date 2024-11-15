@@ -17,7 +17,6 @@ async function bootstrap() {
         .setDescription('This is a RESTful API created to interface with Yoko')
         .setVersion('1.0')
         .addTag('Assistant')
-        .addTag('Tasks')
         .build();
 
     const document = SwaggerModule.createDocument(app, config);
