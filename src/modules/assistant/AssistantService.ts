@@ -82,6 +82,7 @@ export default class AssistantService extends BaseService {
                 });
 
             annotation.downloadURL = fileReference?.downloadURL;
+            annotation.displayName = fileReference?.displayName;
         }
 
         const response: Message = await this.prismaClient.messages.create({

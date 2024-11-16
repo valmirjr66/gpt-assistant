@@ -52,4 +52,5 @@ model Conversation {
 model FileReference {
   fileId      String @id @map("_id")
   downloadURL String
+  displayName String
 }
