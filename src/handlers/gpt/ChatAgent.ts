@@ -1,5 +1,8 @@
 import OpenAI from 'openai';
-import { ChatCompletionMessageToolCall } from 'openai/resources/index.mjs';
+import {
+    ChatCompletionMessageToolCall,
+    FileObject,
+} from 'openai/resources/index.mjs';
 import { ChatCompletionMessageParam } from 'openai/src/resources/index.js';
 import { MethodsBoard } from 'src/modules/assistant/MethodsBoard';
 import { Action, Message } from 'src/types/gpt';
@@ -31,6 +34,9 @@ export class TextResponse {
 export default class ChatAgent {
     private readonly setupMessage: string;
     private readonly methodsBoard: MethodsBoard;
+    private readonly openaiClient = new OpenAI({
+        apiKey: process.env.OPENAI_SECRET_KEY,
+    });
 
     constructor(setupMessage: string, methodsBoard: MethodsBoard) {
         this.setupMessage = setupMessage;
@@ -125,5 +131,13 @@ export default class ChatAgent {
             conversationSoFar,
             false,
         )) as TextResponse;
+    }
+
+    public async getFileById(id: string): Promise<FileObject | null> {
+        try {
+            return await this.openaiClient.files.retrieve(id);
+        } catch (err) {
+            return null;
+        }
     }
 }

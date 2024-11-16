@@ -42,3 +42,9 @@ model Messages {
   toolCall       ToolCall?
   actions        Action[]
 }
+
+model FileReference {
+  id          String @id @default(uuid()) @map("_id")
+  fileName    String
+  downloadURL String
+}

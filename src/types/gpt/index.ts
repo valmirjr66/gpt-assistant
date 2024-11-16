@@ -26,3 +26,12 @@ export type Conversation = {
     id: string;
     messages: Message[];
 };
+
+export type FileMetadata = {
+    id: string;
+    filename: string;
+    // The size of the file, in bytes
+    bytes: number;
+    created_at: number;
+    downloadURL: string;
+};
