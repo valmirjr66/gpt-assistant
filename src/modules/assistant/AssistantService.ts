@@ -8,6 +8,7 @@ import { Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import methodsBoard from './MethodsBoard';
 import ChatAssistant from 'src/handlers/gpt/ChatAssistant';
+import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
 
 @Injectable()
 export default class AssistantService extends BaseService {
@@ -196,5 +197,25 @@ export default class AssistantService extends BaseService {
                 assistantResponse.actions,
             );
         }
+    }
+
+    async getFileMetadataById(
+        id: string,
+    ): Promise<GetFileMetadataResponseModel> {
+        const file = await this.chatAgent.getFileById(id);
+
+        if (!file) return null;
+
+        const fileReference = await this.prismaClient.fileReference.findFirst({
+            where: { id: id },
+        });
+
+        return new GetFileMetadataResponseModel({
+            id: file.id,
+            bytes: file.bytes,
+            created_at: file.created_at,
+            filename: file.filename,
+            downloadURL: fileReference?.downloadURL,
+        });
     }
 }

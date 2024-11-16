@@ -48,3 +48,9 @@ model Conversation {
   id       String  @id @map("_id")
   threadId String?
 }
+
+model FileReference {
+  id          String @id @default(uuid()) @map("_id")
+  fileName    String
+  downloadURL String
+}
