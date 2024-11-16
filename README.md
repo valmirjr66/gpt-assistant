@@ -6,7 +6,7 @@
 -   OPENAI_SECRET_KEY
 -   CLOUD_API_ADDRESS
 -   BASE_BLOB_PATH (e.g.: "./storage")
--   DATABASE_URL (e.g.: "mongodb+srv://<user>:<password>@projetos.splss.mongodb.net/yoko?retryWrites=true&w=majority&appName=projetos")
+-   DATABASE_URL (e.g.: "mongodb+srv://<user>:<password>@projetos.splss.mongodb.net/projetos?retryWrites=true&w=majority&appName=projetos")
 -   BLOB_MANAGEMENT_STRATEGY ("cloud" or "local")
 
 2. Run `npm run prisma:generate`
