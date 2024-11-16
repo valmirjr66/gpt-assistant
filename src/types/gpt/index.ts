@@ -32,6 +32,7 @@ export type Annotation = {
     end_index: number;
     file_citation: { file_id: string };
     text: string;
+    downloadURL?: string;
 };
 
 export type FileMetadata = {
@@ -40,5 +41,5 @@ export type FileMetadata = {
     // The size of the file, in bytes
     bytes: number;
     created_at: number;
-    downloadURL: string;
+    downloadURL?: string;
 };

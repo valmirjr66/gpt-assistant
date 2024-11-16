@@ -75,6 +75,15 @@ export default class AssistantService extends BaseService {
                 model.content,
             );
 
+        for (const annotation of annotations) {
+            const fileReference =
+                await this.prismaClient.fileReference.findFirst({
+                    where: { fileId: annotation.file_citation.file_id },
+                });
+
+            annotation.downloadURL = fileReference?.downloadURL;
+        }
+
         const response: Message = await this.prismaClient.messages.create({
             data: {
                 content: responseContent,
@@ -102,7 +111,7 @@ export default class AssistantService extends BaseService {
         if (!file) return null;
 
         const fileReference = await this.prismaClient.fileReference.findFirst({
-            where: { id: id },
+            where: { fileId: id },
         });
 
         return new GetFileMetadataResponseModel({

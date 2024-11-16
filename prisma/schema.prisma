@@ -50,7 +50,6 @@ model Conversation {
 }
 
 model FileReference {
-  id          String @id @default(uuid()) @map("_id")
-  fileName    String
+  fileId      String @id @map("_id")
   downloadURL String
 }
