@@ -13,8 +13,8 @@ async function bootstrap() {
     app.setGlobalPrefix('api').useGlobalPipes(new ValidationPipe());
 
     const config = new DocumentBuilder()
-        .setTitle('Yoko Assistant API')
-        .setDescription('This is a RESTful API created to interface with Yoko')
+        .setTitle('Generic Generative AI API')
+        .setDescription('This is a RESTful API created to interface with a generic gen AI')
         .setVersion('1.0')
         .addTag('Assistant')
         .build();

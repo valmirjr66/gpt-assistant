@@ -1,36 +1,15 @@
 import OpenAI from 'openai';
-import { ChatCompletionMessageToolCall } from 'openai/resources/index.mjs';
 import { ChatCompletionMessageParam } from 'openai/src/resources/index.js';
 import { MethodsBoard } from 'src/modules/assistant/MethodsBoard';
-import { Action, Message } from 'src/types/gpt';
-
-export class MethodResponse {
-    constructor(
-        toolCall: ChatCompletionMessageToolCall,
-        response: string,
-        actions: Action[] = [],
-    ) {
-        this.toolCall = toolCall;
-        this.response = response;
-        this.actions = actions;
-    }
-
-    toolCall: ChatCompletionMessageToolCall;
-    response: string;
-    actions: Action[];
-}
-
-export class TextResponse {
-    constructor(content: string) {
-        this.content = content;
-    }
-
-    content: string;
-}
+import { Message } from 'src/types/gpt';
+import { MethodResponse, TextResponse } from './ChatAssistant';
 
 export default class ChatAgent {
     private readonly setupMessage: string;
     private readonly methodsBoard: MethodsBoard;
+    private readonly openaiClient = new OpenAI({
+        apiKey: process.env.OPENAI_SECRET_KEY,
+    });
 
     constructor(setupMessage: string, methodsBoard: MethodsBoard) {
         this.setupMessage = setupMessage;

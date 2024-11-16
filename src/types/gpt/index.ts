@@ -26,3 +26,20 @@ export type Conversation = {
     id: string;
     messages: Message[];
 };
+
+export type Annotation = {
+    start_index: number;
+    end_index: number;
+    file_citation: { file_id: string };
+    text: string;
+    downloadURL?: string;
+};
+
+export type FileMetadata = {
+    id: string;
+    filename: string;
+    // The size of the file, in bytes
+    bytes: number;
+    created_at: number;
+    downloadURL?: string;
+};
