@@ -26,3 +26,10 @@ export type Conversation = {
     id: string;
     messages: Message[];
 };
+
+export type Annotation = {
+    start_index: number;
+    end_index: number;
+    file_citation: { file_id: string };
+    text: string;
+};

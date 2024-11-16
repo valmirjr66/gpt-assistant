@@ -7,6 +7,7 @@ import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageRes
 import { Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import methodsBoard from './MethodsBoard';
+import ChatAssistant from 'src/handlers/gpt/ChatAssistant';
 
 @Injectable()
 export default class AssistantService extends BaseService {
@@ -15,6 +16,10 @@ export default class AssistantService extends BaseService {
         private readonly chatAgent: ChatAgent = new ChatAgent(
             YOKO_SETUP,
             methodsBoard,
+        ),
+        @Optional()
+        private readonly chatAssistant: ChatAssistant = new ChatAssistant(
+            process.env.ASSISTANT_ID,
         ),
     ) {
         super();
@@ -44,6 +49,60 @@ export default class AssistantService extends BaseService {
     }
 
     async sendMessage(
+        model: SendMessageRequestModel,
+    ): Promise<SendMessageResponseModel> {
+        const conversation = await this.prismaClient.conversation.findFirst({
+            where: { id: model.conversationId },
+        });
+
+        let threadId: string;
+
+        if (conversation && !conversation.threadId)
+            throw new Error('No thread found for the given conversation');
+
+        if (!conversation) {
+            threadId = await this.chatAssistant.startThread();
+            await this.prismaClient.conversation.create({
+                data: { id: model.conversationId, threadId },
+            });
+        } else {
+            threadId = conversation.threadId;
+        }
+
+        await this.prismaClient.messages.create({
+            data: {
+                content: model.content,
+                conversationId: model.conversationId,
+                role: 'user',
+            },
+        });
+
+        const { content: responseContent, annotations } =
+            await this.chatAssistant.addMessageToThread(
+                threadId,
+                model.content,
+            );
+
+        const response: Message = await this.prismaClient.messages.create({
+            data: {
+                content: responseContent,
+                conversationId: model.conversationId,
+                role: 'assistant',
+                annotations: JSON.stringify(annotations),
+            },
+        });
+
+        return new SendMessageResponseModel(
+            response.id,
+            response.content,
+            response.role,
+            response.conversationId,
+            [],
+            annotations,
+        );
+    }
+
+    async oldSendMessage(
         model: SendMessageRequestModel,
     ): Promise<SendMessageResponseModel> {
         const conversationSoFar: Message[] =

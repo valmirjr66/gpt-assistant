@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { ChatCompletionMessageToolCall } from 'openai/resources/index.mjs';
 import { ChatCompletionMessageParam } from 'openai/src/resources/index.js';
 import { MethodsBoard } from 'src/modules/assistant/MethodsBoard';
-import { Action, Message } from 'src/types/gpt';
+import { Action, Annotation, Message } from 'src/types/gpt';
 
 export class MethodResponse {
     constructor(
@@ -21,11 +21,13 @@ export class MethodResponse {
 }
 
 export class TextResponse {
-    constructor(content: string) {
+    constructor(content: string, annotations?: Annotation[]) {
         this.content = content;
+        this.annotations = annotations;
     }
 
     content: string;
+    annotations?: Annotation[];
 }
 
 export default class ChatAgent {

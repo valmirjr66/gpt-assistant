@@ -41,4 +41,10 @@ model Messages {
   conversationId String
   toolCall       ToolCall?
   actions        Action[]
+  annotations    String?
+}
+
+model Conversation {
+  id       String  @id @map("_id")
+  threadId String?
 }
