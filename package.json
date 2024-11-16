@@ -1,7 +1,7 @@
 {
-  "name": "yoko.assistant",
-  "version": "0.0.1",
-  "description": "A GPT assistant to help me manage my stuff",
+  "name": "generic.generative.ai.assistant",
+  "version": "1.0.0",
+  "description": "An example of a RESTful API created to interface with a generic gen AI'",
   "author": "Valmir Jr.",
   "private": true,
   "license": "UNLICENSED",
