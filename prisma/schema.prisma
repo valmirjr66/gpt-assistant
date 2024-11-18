@@ -47,6 +47,7 @@ model Messages {
 model Conversation {
   id       String  @id @map("_id")
   threadId String?
+  title    String
 }
 
 model FileReference {

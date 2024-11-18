@@ -33,7 +33,7 @@ export type Annotation = {
     file_citation: { file_id: string };
     text: string;
     downloadURL?: string;
-    displayName: string;
+    displayName?: string;
 };
 
 export type FileMetadata = {

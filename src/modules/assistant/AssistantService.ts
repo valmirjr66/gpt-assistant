@@ -6,6 +6,7 @@ import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageRes
 import { Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
+import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 
 @Injectable()
 export default class AssistantService extends BaseService {
@@ -48,17 +49,29 @@ export default class AssistantService extends BaseService {
         });
 
         let threadId: string;
+        let conversationTitle: string;
 
         if (conversation && !conversation.threadId)
             throw new Error('No thread found for the given conversation');
 
         if (!conversation) {
             threadId = await this.chatAssistant.startThread();
+
+            conversationTitle = await new SimpleAgent(
+                `Você é um agente projetado para criar títulos de conversações,
+                para cada input responda sempre e somente com uma frase curta que sumarize o tema da conversa.`,
+            ).createCompletion(model.content);
+
             await this.prismaClient.conversation.create({
-                data: { id: model.conversationId, threadId },
+                data: {
+                    id: model.conversationId,
+                    threadId,
+                    title: conversationTitle,
+                },
             });
         } else {
             threadId = conversation.threadId;
+            conversationTitle = conversation.title;
         }
 
         await this.prismaClient.messages.create({
@@ -99,6 +112,7 @@ export default class AssistantService extends BaseService {
             response.content,
             response.role,
             response.conversationId,
+            conversationTitle,
             [],
             annotations,
         );

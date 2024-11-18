@@ -5,6 +5,7 @@ export default class SendMessageResponseModel {
     content: string;
     role: Role;
     conversationId: string;
+    conversationTitle: string;
     actions: Action[];
     annotations: Annotation[];
 
@@ -13,6 +14,7 @@ export default class SendMessageResponseModel {
         content: string,
         role: Role,
         conversationId: string,
+        conversationTitle: string,
         actions: Action[] = [],
         annotations: Annotation[] = [],
     ) {
@@ -20,6 +22,7 @@ export default class SendMessageResponseModel {
         this.content = content;
         this.role = role;
         this.conversationId = conversationId;
+        this.conversationTitle = conversationTitle;
         this.actions = actions;
         this.annotations = annotations;
     }
