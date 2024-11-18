@@ -33,8 +33,17 @@ export default class AssistantService extends BaseService {
                 },
             });
 
+        if (!conversationMessages) return null;
+
+        const conversationTitle = (
+            await this.prismaClient.conversation.findUnique({
+                where: { id: id },
+            })
+        )?.title;
+
         const conversation = new GetConversationResponseModel(
             id,
+            conversationTitle,
             conversationMessages,
         );
 
