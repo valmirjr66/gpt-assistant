@@ -50,49 +50,55 @@ export default class ChatAssistant {
     public async addMessageToThread(
         threadId: string,
         message: string,
+        updateDateTextSnapshot: (delta: string) => Promise<void>,
+        finishWritingStatus: () => Promise<void>,
     ): Promise<TextResponse> {
         await this.openaiClient.beta.threads.messages.create(threadId, {
             role: 'user',
             content: message,
         });
 
-        const run = await this.openaiClient.beta.threads.runs.createAndPoll(
-            threadId,
-            {
+        const run = this.openaiClient.beta.threads.runs
+            .stream(threadId, {
                 assistant_id: this.assistantId,
-            },
-        );
+            })
+            .on('textCreated', () => process.stdout.write('\nAssistant > '))
+            .on('textDelta', (textDelta, textSnapshot) => {
+                process.stdout.write(textDelta.value);
+                updateDateTextSnapshot(textSnapshot.value);
+            })
+            .on('error', async (err) => {
+                console.error(
+                    'Error while streaming response on thread ',
+                    threadId,
+                    '. Error object is as following:\n\n',
+                    JSON.stringify(err),
+                );
 
-        if (run.status === 'completed') {
-            const messages = await this.openaiClient.beta.threads.messages.list(
-                run.thread_id,
-            );
+                await finishWritingStatus();
+                throw new Error("Run wasn't completed");
+            })
+            .on('end', async () => {
+                await finishWritingStatus();
+            });
 
-            const responseContent = messages.data[0].content;
+        await new Promise((resolve) => run.on('messageDone', resolve));
 
-            // TODO: Remove this validation as it's only a temporary workaround
-            // so I don't have to deal with all response types right now
-            if (
-                responseContent.length > 1 ||
-                responseContent[0].type !== 'text'
-            ) {
-                throw new Error('Unknown response format');
-            }
+        const messages =
+            await this.openaiClient.beta.threads.messages.list(threadId);
 
-            return new TextResponse(
-                responseContent[0].text.value,
-                responseContent[0].text.annotations as FileCitationAnnotation[],
-            );
-        } else {
-            console.log(
-                "Run status was: '",
-                run.status,
-                "' on thread ",
-                threadId,
-            );
+        const responseContent = messages.data[0].content;
 
-            throw new Error("Run wasn't completed");
+        // TODO: Remove this validation as it's only a temporary workaround
+        // so I don't have to deal with all response types right now
+        if (responseContent.length > 1 || responseContent[0].type !== 'text') {
+            throw new Error('Unknown response format');
         }
+
+        return new TextResponse(
+            responseContent[0].text.value,
+            responseContent[0].text.annotations as FileCitationAnnotation[],
+        );
     }
 
     public async getFileById(id: string): Promise<FileObject | null> {

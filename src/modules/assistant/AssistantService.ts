@@ -33,9 +33,19 @@ export default class AssistantService extends BaseService {
                 },
             });
 
+        const assistantIsWriting: boolean =
+            (
+                await this.prismaClient.conversation.findFirst({
+                    where: {
+                        id: id,
+                    },
+                })
+            )?.assistantIsWriting || false;
+
         const conversation = new GetConversationResponseModel(
             id,
             conversationMessages,
+            assistantIsWriting,
         );
 
         return conversation;
@@ -67,6 +77,7 @@ export default class AssistantService extends BaseService {
                     id: model.conversationId,
                     threadId,
                     title: conversationTitle,
+                    assistantIsWriting: true,
                 },
             });
         } else {
@@ -82,10 +93,51 @@ export default class AssistantService extends BaseService {
             },
         });
 
+        const initialMessage: Message = await this.prismaClient.messages.create(
+            {
+                data: {
+                    content: '',
+                    conversationId: model.conversationId,
+                    role: 'assistant',
+                },
+            },
+        );
+
+        let updateInProgress = false;
+
         const { content: responseContent, annotations } =
             await this.chatAssistant.addMessageToThread(
                 threadId,
                 model.content,
+                async (textSnapshot: string) => {
+                    try {
+                        if (!updateInProgress) {
+                            updateInProgress = true;
+                            await this.prismaClient.messages.update({
+                                where: { id: initialMessage.id },
+                                data: {
+                                    content: textSnapshot,
+                                },
+                            });
+                            updateInProgress = false;
+                        }
+                    } catch (err) {
+                        console.error(
+                            'Error while trying to append message delta do Prisma, probably a deadlock conflict.',
+                            'Complete error stack is as follows:\n',
+                            JSON.stringify(err),
+                        );
+                    }
+                },
+                async () => {
+                    await this.prismaClient.conversation.update({
+                        where: { id: model.conversationId },
+                        data: {
+                            assistantIsWriting: false,
+                            title: conversationTitle,
+                        },
+                    });
+                },
             );
 
         for (const annotation of annotations) {
@@ -98,11 +150,10 @@ export default class AssistantService extends BaseService {
             annotation.displayName = fileReference?.displayName;
         }
 
-        const response: Message = await this.prismaClient.messages.create({
+        const response: Message = await this.prismaClient.messages.update({
+            where: { id: initialMessage.id },
             data: {
                 content: responseContent,
-                conversationId: model.conversationId,
-                role: 'assistant',
                 annotations: JSON.stringify(annotations),
             },
         });

@@ -45,9 +45,10 @@ model Messages {
 }
 
 model Conversation {
-  id       String  @id @map("_id")
-  threadId String?
-  title    String
+  id                 String  @id @map("_id")
+  threadId           String?
+  title              String
+  assistantIsWriting Boolean
 }
 
 model FileReference {
