@@ -91,13 +91,18 @@ export default class AssistantService extends BaseService {
             },
         });
 
-        const { content: responseContent, annotations } =
+        const messageAddedToThread =
             await this.chatAssistant.addMessageToThread(
                 threadId,
                 model.content,
             );
 
-        for (const annotation of annotations) {
+        let responseContent = messageAddedToThread.content;
+        const annotations = messageAddedToThread.annotations;
+
+        for (let i = 0; i < annotations.length; i++) {
+            const annotation = annotations[i];
+
             const fileReference =
                 await this.prismaClient.fileReference.findFirst({
                     where: { fileId: annotation.file_citation.file_id },
@@ -105,6 +110,11 @@ export default class AssistantService extends BaseService {
 
             annotation.downloadURL = fileReference?.downloadURL;
             annotation.displayName = fileReference?.displayName;
+
+            responseContent = responseContent.replace(
+                /【[^】]*】/g,
+                `<sup>[${String(i + 1)}]</sup>`,
+            );
         }
 
         const response: Message = await this.prismaClient.messages.create({
