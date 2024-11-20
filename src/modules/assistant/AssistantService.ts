@@ -132,8 +132,8 @@ export default class AssistantService extends BaseService {
             annotation.downloadURL = fileReference?.downloadURL;
             annotation.displayName = fileReference?.displayName;
 
-            responseContent = responseContent.replace(
-                /【[^】]*】/g,
+            responseContent = responseContent.replaceAll(
+                annotation.text,
                 `<sup>[${String(i + 1)}]</sup>`,
             );
         }
