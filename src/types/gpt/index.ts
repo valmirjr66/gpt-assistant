@@ -44,3 +44,10 @@ export type FileMetadata = {
     created_at: number;
     downloadURL?: string;
 };
+
+export type Reference = {
+    fileId: string;
+    downloadURL: string;
+    displayName: string;
+    previewImageURL?: string;
+};

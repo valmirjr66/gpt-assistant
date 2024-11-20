@@ -45,13 +45,15 @@ model Messages {
 }
 
 model Conversation {
-  id       String  @id @map("_id")
-  threadId String?
-  title    String
+  id               String   @id @map("_id")
+  threadId         String?
+  title            String
+  referenceFileIds String[]
 }
 
 model FileReference {
-  fileId      String @id @map("_id")
-  downloadURL String
-  displayName String
+  fileId          String  @id @map("_id")
+  downloadURL     String
+  displayName     String
+  previewImageURL String?
 }

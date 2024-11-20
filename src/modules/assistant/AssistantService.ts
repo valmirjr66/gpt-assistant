@@ -1,12 +1,12 @@
 import { Injectable, Optional } from '@nestjs/common';
 import ChatAssistant from 'src/handlers/gpt/ChatAssistant';
+import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
 import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequestModel';
 import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageResponseModel';
-import { Message } from 'src/types/gpt';
+import { Annotation, Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
-import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 
 @Injectable()
 export default class AssistantService extends BaseService {
@@ -22,6 +22,15 @@ export default class AssistantService extends BaseService {
     async getConversationById(
         id: string,
     ): Promise<GetConversationResponseModel> {
+        const { referenceFileIds } =
+            await this.prismaClient.conversation.findFirst({
+                where: { id: id },
+            });
+
+        const relatedFiles = await this.prismaClient.fileReference.findMany({
+            where: { fileId: { in: referenceFileIds } },
+        });
+
         const conversationMessages: Message[] =
             await this.prismaClient.messages.findMany({
                 where: {
@@ -33,12 +42,13 @@ export default class AssistantService extends BaseService {
                 },
             });
 
-        const conversation = new GetConversationResponseModel(
+        const response = new GetConversationResponseModel(
             id,
             conversationMessages,
+            relatedFiles,
         );
 
-        return conversation;
+        return response;
     }
 
     async sendMessage(
@@ -50,6 +60,7 @@ export default class AssistantService extends BaseService {
 
         let threadId: string;
         let conversationTitle: string;
+        let conversationReferences: string[];
 
         if (conversation && !conversation.threadId)
             throw new Error('No thread found for the given conversation');
@@ -62,6 +73,8 @@ export default class AssistantService extends BaseService {
                 para cada input responda sempre e somente com uma frase curta que sumarize o tema da conversa.`,
             ).createCompletion(model.content);
 
+            conversationReferences = [];
+
             await this.prismaClient.conversation.create({
                 data: {
                     id: model.conversationId,
@@ -72,6 +85,7 @@ export default class AssistantService extends BaseService {
         } else {
             threadId = conversation.threadId;
             conversationTitle = conversation.title;
+            conversationReferences = conversation.referenceFileIds;
         }
 
         await this.prismaClient.messages.create({
@@ -89,7 +103,11 @@ export default class AssistantService extends BaseService {
             );
 
         let responseContent = messageAddedToThread.content;
-        const annotations = messageAddedToThread.annotations;
+
+        const annotations = this.uniqueByProperty(
+            messageAddedToThread.annotations,
+            'file_citation.file_id',
+        ) as Annotation[];
 
         for (let i = 0; i < annotations.length; i++) {
             const annotation = annotations[i];
@@ -107,6 +125,18 @@ export default class AssistantService extends BaseService {
                 `<sup>[${String(i + 1)}]</sup>`,
             );
         }
+
+        await this.prismaClient.conversation.update({
+            where: { id: model.conversationId },
+            data: {
+                referenceFileIds: [
+                    ...conversationReferences,
+                    ...annotations.map(
+                        (anotation) => anotation.file_citation.file_id,
+                    ),
+                ],
+            },
+        });
 
         const response: Message = await this.prismaClient.messages.create({
             data: {
@@ -146,6 +176,21 @@ export default class AssistantService extends BaseService {
             filename: file.filename,
             downloadURL: fileReference?.downloadURL,
         });
+    }
+
+    private uniqueByProperty<T>(
+        array: { [key: string]: unknown }[],
+        property: string,
+    ) {
+        const seen = new Set();
+        return array.filter((item) => {
+            const value = item[property];
+            if (seen.has(value)) {
+                return false;
+            }
+            seen.add(value);
+            return true;
+        }) as T[];
     }
 
     // async oldSendMessage(
