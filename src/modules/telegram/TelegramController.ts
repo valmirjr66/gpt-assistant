@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import handleMessage from "./MessageHandler";
 
-@ApiTags('Telegram bot')
+@ApiTags('Telegram Bot')
 @Controller('telegram')
 export class TelegramController {
   @Post()
@@ -31,8 +31,11 @@ export class TelegramController {
     const body = req;
 
     if (body) {
-      const messageObj = body.message;
-      await handleMessage(messageObj);
+      const messageObj = body.message || "";
+      if (messageObj !== "") {
+        await handleMessage(messageObj);
+      }
+      
     }
     return;
   }
