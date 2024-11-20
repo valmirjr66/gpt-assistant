@@ -28,7 +28,7 @@ export default class AssistantService extends BaseService {
             });
 
         const relatedFiles = await this.prismaClient.fileReference.findMany({
-            where: { fileId: { in: referenceFileIds } },
+            where: { fileId: { in: referenceFileIds || [] } },
         });
 
         const conversationMessages: Message[] =

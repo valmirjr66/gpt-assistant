@@ -89,6 +89,8 @@ export default class ChatAssistant {
                 run.status,
                 "' on thread ",
                 threadId,
+                '. Error is as following:\n',
+                run.last_error,
             );
 
             throw new Error("Run wasn't completed");
