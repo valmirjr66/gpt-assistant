@@ -22,13 +22,15 @@ export default class AssistantService extends BaseService {
     async getConversationById(
         id: string,
     ): Promise<GetConversationResponseModel> {
-        const { referenceFileIds } =
-            await this.prismaClient.conversation.findFirst({
-                where: { id: id },
-            });
+        const referenceFileIds =
+            (
+                await this.prismaClient.conversation.findFirst({
+                    where: { id: id },
+                })
+            ).referenceFileIds || [];
 
         const relatedFiles = await this.prismaClient.fileReference.findMany({
-            where: { fileId: { in: referenceFileIds || [] } },
+            where: { fileId: { in: referenceFileIds } },
         });
 
         const conversationMessages: Message[] =
