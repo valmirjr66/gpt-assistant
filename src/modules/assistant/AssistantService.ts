@@ -140,7 +140,7 @@ export default class AssistantService extends BaseService {
 
             responseContent = responseContent.replaceAll(
                 `[${distinctAnnotations[i].file_citation.file_id}]`,
-                `<sup>[${i}]</sup>`,
+                `<sup>[${i + 1}]</sup>`,
             );
         }
 
