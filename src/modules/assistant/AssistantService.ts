@@ -83,7 +83,7 @@ export default class AssistantService extends BaseService {
                 `You are an agent designed to create conversation titles.
                 For each input, always and only respond with a short sentence
                 that summarizes the topic of the conversation.
-                Remember to always write the title in the user language.`,
+                Remember to always write the title in english.`,
             ).createCompletion(model.content);
 
             conversationReferences = [];
@@ -117,24 +117,30 @@ export default class AssistantService extends BaseService {
 
         let responseContent = messageAddedToThread.content;
 
-        const annotations = this.getDistinticAnnotations(
-            messageAddedToThread.annotations,
-        ) as Annotation[];
+        const annotations = messageAddedToThread.annotations;
 
-        for (let i = 0; i < annotations.length; i++) {
-            const annotation = annotations[i];
-
-            const fileReference =
-                await this.prismaClient.fileReference.findFirst({
-                    where: { fileId: annotation.file_citation.file_id },
-                });
-
-            annotation.downloadURL = fileReference?.downloadURL;
-            annotation.displayName = fileReference?.displayName;
-
+        for (const annotation of annotations)
             responseContent = responseContent.replaceAll(
                 annotation.text,
-                `<sup>[${String(i + 1)}]</sup>`,
+                `[${annotation.file_citation.file_id}]`,
+            );
+
+        const distinctAnnotations = this.getDistinticAnnotations(annotations);
+
+        for (let i = 0; i < distinctAnnotations.length; i++) {
+            const fileReference =
+                await this.prismaClient.fileReference.findFirst({
+                    where: {
+                        fileId: distinctAnnotations[i].file_citation.file_id,
+                    },
+                });
+
+            distinctAnnotations[i].downloadURL = fileReference?.downloadURL;
+            distinctAnnotations[i].displayName = fileReference?.displayName;
+
+            responseContent = responseContent.replaceAll(
+                `[${distinctAnnotations[i].file_citation.file_id}]`,
+                `<sup>[${i}]</sup>`,
             );
         }
 
@@ -143,7 +149,7 @@ export default class AssistantService extends BaseService {
             data: {
                 referenceFileIds: [
                     ...conversationReferences,
-                    ...annotations.map(
+                    ...distinctAnnotations.map(
                         (anotation) => anotation.file_citation.file_id,
                     ),
                 ],
@@ -155,7 +161,7 @@ export default class AssistantService extends BaseService {
                 content: responseContent,
                 conversationId: model.conversationId,
                 role: 'assistant',
-                annotations: JSON.stringify(annotations),
+                annotations: JSON.stringify(distinctAnnotations),
             },
         });
 
