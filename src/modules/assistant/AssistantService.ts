@@ -82,7 +82,8 @@ export default class AssistantService extends BaseService {
             conversationTitle = await new SimpleAgent(
                 `You are an agent designed to create conversation titles.
                 For each input, always and only respond with a short sentence
-                that summarizes the topic of the conversation.`,
+                that summarizes the topic of the conversation.
+                Remember to always write the title in the user language.`,
             ).createCompletion(model.content);
 
             conversationReferences = [];
@@ -116,9 +117,8 @@ export default class AssistantService extends BaseService {
 
         let responseContent = messageAddedToThread.content;
 
-        const annotations = this.uniqueByProperty(
+        const annotations = this.getDistinticAnnotations(
             messageAddedToThread.annotations,
-            'file_citation.file_id',
         ) as Annotation[];
 
         for (let i = 0; i < annotations.length; i++) {
@@ -190,19 +190,16 @@ export default class AssistantService extends BaseService {
         });
     }
 
-    private uniqueByProperty<T>(
-        array: { [key: string]: unknown }[],
-        property: string,
-    ) {
+    private getDistinticAnnotations(array: Annotation[]): Annotation[] {
         const seen = new Set();
         return array.filter((item) => {
-            const value = item[property];
+            const value = item.file_citation.file_id;
             if (seen.has(value)) {
                 return false;
             }
             seen.add(value);
             return true;
-        }) as T[];
+        });
     }
 
     // async oldSendMessage(
