@@ -18,6 +18,21 @@ function sendMessage(messageObj, messageText) {
     );
 }
 
+function formatMessage(data) {
+    let content = data.content.replace(/<sup>/g, '').replace(/<\/sup>/g, '');
+  
+    const citations = data.annotations
+      .filter(annotation => annotation.file_citation && annotation.downloadURL && annotation.displayName)
+      .map((annotation, index) => {
+        return `[${index + 1}]. ${annotation.displayName} - ${annotation.downloadURL}`;
+      });
+  
+    content += '\n\n' + citations.join('\n');
+  
+    return content;
+  }
+
+
 async function handleMessage(messageObj) {
     const messageText = messageObj.text || "";
 
@@ -38,10 +53,10 @@ async function handleMessage(messageObj) {
     } else {
         if (messageText !== "") {
             const chatMessage = await getChatAnswer(messageObj, messageText)
-            console.log(chatMessage.data.content)
+            const formattedMessage = formatMessage(chatMessage.data)
             return sendMessage(
                 messageObj,
-                chatMessage.data.content
+                formattedMessage
             );
         } else {
             return sendMessage(
