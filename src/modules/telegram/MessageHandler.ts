@@ -38,6 +38,7 @@ async function handleMessage(messageObj) {
     } else {
         if (messageText !== "") {
             const chatMessage = await getChatAnswer(messageObj, messageText)
+            console.log(chatMessage.data.content)
             return sendMessage(
                 messageObj,
                 chatMessage.data.content
