@@ -80,8 +80,9 @@ export default class AssistantService extends BaseService {
             threadId = await this.chatAssistant.startThread();
 
             conversationTitle = await new SimpleAgent(
-                `Você é um agente projetado para criar títulos de conversações,
-                para cada input responda sempre e somente com uma frase curta que sumarize o tema da conversa.`,
+                `You are an agent designed to create conversation titles.
+                For each input, always and only respond with a short sentence
+                that summarizes the topic of the conversation.`,
             ).createCompletion(model.content);
 
             conversationReferences = [];
