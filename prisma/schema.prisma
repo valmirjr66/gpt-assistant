@@ -52,6 +52,7 @@ model Conversation {
   title            String
   referenceFileIds String[]
   createdAt        DateTime
+  archived         Boolean  @default(false)
 }
 
 model FileReference {

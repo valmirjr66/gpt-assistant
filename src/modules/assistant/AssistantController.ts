@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Headers,
+    Param,
+    Post,
+} from '@nestjs/common';
 import {
     ApiInternalServerErrorResponse,
     ApiNoContentResponse,
@@ -36,6 +44,16 @@ export default class AssistantController extends BaseController {
         );
         this.validateGetResponse(response);
         return response;
+    }
+
+    @Delete('/conversations/:id')
+    @ApiOkResponse({ description: ResponseDescriptions.OK })
+    @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
+    @ApiInternalServerErrorResponse({
+        description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+    })
+    async deleteConversationById(@Param('id') id: string): Promise<void> {
+        await this.assistantService.deleteConversationById(id);
     }
 
     @Get('/conversations/:id')
