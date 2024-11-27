@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import handleMessage from './MessageHandler';
 
@@ -9,7 +9,7 @@ export class TelegramController {
     async handlePost(@Body() body: any): Promise<any> {
         const cleanedBody = { ...body };
 
-        return await this.handler(cleanedBody, 'post');
+        return await this.handler(cleanedBody);
     }
 
     @Get()
@@ -20,7 +20,7 @@ export class TelegramController {
             url: req.url,
         };
 
-        return await this.handler(simplifiedReq, 'get');
+        return await this.handler(simplifiedReq);
     }
 
     private async handler(req: any): Promise<any> {
