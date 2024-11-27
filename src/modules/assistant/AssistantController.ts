@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
 import {
     ApiInternalServerErrorResponse,
+    ApiNoContentResponse,
     ApiNotFoundResponse,
     ApiOkResponse,
     ApiTags,
@@ -10,8 +11,9 @@ import SendMessageRequestDto from 'src/modules/assistant/dto/SendMessageRequestD
 import BaseController from '../../BaseController';
 import AssistantService from './AssistantService';
 import GetConversationResponseDto from './dto/GetConversationResponseDto';
-import SendMessageResponseDto from './dto/SendMessageResponseDto';
+import GetConversationsByUserIdDto from './dto/GetConversationsByUserIdDto';
 import GetFileMetadataResponseDto from './dto/GetFileMetadataResponseDto';
+import SendMessageResponseDto from './dto/SendMessageResponseDto';
 
 @ApiTags('Assistant')
 @Controller('assistant')
@@ -20,7 +22,23 @@ export default class AssistantController extends BaseController {
         super();
     }
 
-    @Get('/conversation/:id')
+    @Get('/conversations')
+    @ApiOkResponse({ description: ResponseDescriptions.OK })
+    @ApiNoContentResponse({ description: ResponseDescriptions.NO_CONTENT })
+    @ApiInternalServerErrorResponse({
+        description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+    })
+    async getConversationsByUserId(
+        @Headers('userId') userId?: string,
+    ): Promise<GetConversationsByUserIdDto> {
+        const response = await this.assistantService.getConversationsByUserId(
+            userId || 'anonymous',
+        );
+        this.validateGetResponse(response);
+        return response;
+    }
+
+    @Get('/conversations/:id')
     @ApiOkResponse({ description: ResponseDescriptions.OK })
     @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
     @ApiInternalServerErrorResponse({
@@ -34,7 +52,7 @@ export default class AssistantController extends BaseController {
         return response;
     }
 
-    @Post('/conversation/message')
+    @Post('/conversations/message')
     @ApiOkResponse({ description: ResponseDescriptions.CREATED })
     @ApiNotFoundResponse({ description: ResponseDescriptions.BAD_REQUEST })
     @ApiInternalServerErrorResponse({
@@ -42,8 +60,13 @@ export default class AssistantController extends BaseController {
     })
     async sendMessage(
         @Body() dto: SendMessageRequestDto,
+        @Headers('userId') userId?: string,
     ): Promise<SendMessageResponseDto> {
-        const response = await this.assistantService.sendMessage(dto);
+        const response = await this.assistantService.sendMessage({
+            ...dto,
+            userId: userId || 'anonymous',
+        });
+
         return response;
     }
 

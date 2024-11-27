@@ -7,6 +7,7 @@ import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageRes
 import { Annotation, Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
+import GetConversationsByUserIdModel from './model/GetConversationsByUserIdModel';
 
 @Injectable()
 export default class AssistantService extends BaseService {
@@ -19,15 +20,30 @@ export default class AssistantService extends BaseService {
         super();
     }
 
+    async getConversationsByUserId(
+        userId?: string,
+    ): Promise<GetConversationsByUserIdModel> {
+        const response = await this.prismaClient.conversation.findMany({
+            where: { userId },
+        });
+
+        return new GetConversationsByUserIdModel(
+            response.map((item) => ({
+                id: item.id,
+                title: item.title,
+            })),
+        );
+    }
+
     async getConversationById(
-        id: string,
+        conversationId: string,
     ): Promise<GetConversationResponseModel> {
         const referenceFileIds =
             (
                 await this.prismaClient.conversation.findFirst({
-                    where: { id: id },
+                    where: { id: conversationId },
                 })
-            ).referenceFileIds || [];
+            )?.referenceFileIds || [];
 
         const relatedFiles = await this.prismaClient.fileReference.findMany({
             where: { fileId: { in: referenceFileIds } },
@@ -36,7 +52,7 @@ export default class AssistantService extends BaseService {
         const conversationMessages: Message[] =
             await this.prismaClient.messages.findMany({
                 where: {
-                    conversationId: id,
+                    conversationId: conversationId,
                     AND: {
                         NOT: { role: 'tool' },
                         OR: [{ NOT: { content: null } }],
@@ -48,12 +64,12 @@ export default class AssistantService extends BaseService {
 
         const conversationTitle = (
             await this.prismaClient.conversation.findUnique({
-                where: { id: id },
+                where: { id: conversationId },
             })
         )?.title;
 
         const response = new GetConversationResponseModel(
-            id,
+            conversationId,
             conversationTitle,
             conversationMessages,
             relatedFiles,
@@ -83,13 +99,14 @@ export default class AssistantService extends BaseService {
                 `You are an agent designed to create conversation titles.
                 For each input, always and only respond with a short sentence
                 that summarizes the topic of the conversation.
-                Remember to always write the title in the user language.`,
+                Remember to always write the title in english.`,
             ).createCompletion(model.content);
 
             conversationReferences = [];
 
             await this.prismaClient.conversation.create({
                 data: {
+                    userId: model.userId,
                     id: model.conversationId,
                     threadId,
                     title: conversationTitle,
@@ -117,24 +134,30 @@ export default class AssistantService extends BaseService {
 
         let responseContent = messageAddedToThread.content;
 
-        const annotations = this.getDistinticAnnotations(
-            messageAddedToThread.annotations,
-        ) as Annotation[];
+        const annotations = messageAddedToThread.annotations;
 
-        for (let i = 0; i < annotations.length; i++) {
-            const annotation = annotations[i];
+        for (const annotation of annotations)
+            responseContent = responseContent.replaceAll(
+                annotation.text,
+                `[${annotation.file_citation.file_id}]`,
+            );
 
+        const distinctAnnotations = this.getDistinticAnnotations(annotations);
+
+        for (let i = 0; i < distinctAnnotations.length; i++) {
             const fileReference =
                 await this.prismaClient.fileReference.findFirst({
-                    where: { fileId: annotation.file_citation.file_id },
+                    where: {
+                        fileId: distinctAnnotations[i].file_citation.file_id,
+                    },
                 });
 
-            annotation.downloadURL = fileReference?.downloadURL;
-            annotation.displayName = fileReference?.displayName;
+            distinctAnnotations[i].downloadURL = fileReference?.downloadURL;
+            distinctAnnotations[i].displayName = fileReference?.displayName;
 
-            responseContent = responseContent.replace(
-                /【[^】]*】/g,
-                `<sup>[${String(i + 1)}]</sup>`,
+            responseContent = responseContent.replaceAll(
+                `[${distinctAnnotations[i].file_citation.file_id}]`,
+                `<sup>[${i + 1}]</sup>`,
             );
         }
 
@@ -143,7 +166,7 @@ export default class AssistantService extends BaseService {
             data: {
                 referenceFileIds: [
                     ...conversationReferences,
-                    ...annotations.map(
+                    ...distinctAnnotations.map(
                         (anotation) => anotation.file_citation.file_id,
                     ),
                 ],
@@ -155,7 +178,7 @@ export default class AssistantService extends BaseService {
                 content: responseContent,
                 conversationId: model.conversationId,
                 role: 'assistant',
-                annotations: JSON.stringify(annotations),
+                annotations: JSON.stringify(distinctAnnotations),
             },
         });
 
