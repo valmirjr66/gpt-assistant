@@ -81,7 +81,7 @@ export default class Connector {
             const res = await drive.files.list({
                 pageSize: 100,
                 fields: 'nextPageToken, files(id, name)',
-                // q: `name contains \'${basePath}\'`,
+                q: `name contains \'${basePath}\'`,
             });
             const files = res.data.files;
             if (files.length === 0) {
