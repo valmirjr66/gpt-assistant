@@ -6,6 +6,7 @@ import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequ
 import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageResponseModel';
 import { Annotation, Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
+import GetConversationsByUserIdModel from './model/GetConversationsByUserIdModel';
 import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
 
 @Injectable()
@@ -19,13 +20,36 @@ export default class AssistantService extends BaseService {
         super();
     }
 
+    async deleteConversationById(id: string) {
+        await this.prismaClient.conversation.update({
+            data: { archived: true },
+            where: { id },
+        });
+    }
+
+    async getConversationsByUserId(
+        userId?: string,
+    ): Promise<GetConversationsByUserIdModel> {
+        const response = await this.prismaClient.conversation.findMany({
+            where: { userId, archived: false },
+        });
+
+        return new GetConversationsByUserIdModel(
+            response.map((item) => ({
+                id: item.id,
+                title: item.title,
+                createdAt: item.createdAt,
+            })),
+        );
+    }
+
     async getConversationById(
-        id: string,
+        conversationId: string,
     ): Promise<GetConversationResponseModel> {
         const referenceFileIds =
             (
                 await this.prismaClient.conversation.findFirst({
-                    where: { id: id },
+                    where: { id: conversationId },
                 })
             )?.referenceFileIds || [];
 
@@ -36,7 +60,7 @@ export default class AssistantService extends BaseService {
         const conversationMessages: Message[] =
             await this.prismaClient.messages.findMany({
                 where: {
-                    conversationId: id,
+                    conversationId: conversationId,
                     AND: {
                         NOT: { role: 'tool' },
                         OR: [{ NOT: { content: null } }],
@@ -48,12 +72,12 @@ export default class AssistantService extends BaseService {
 
         const conversationTitle = (
             await this.prismaClient.conversation.findUnique({
-                where: { id: id },
+                where: { id: conversationId },
             })
         )?.title;
 
         const response = new GetConversationResponseModel(
-            id,
+            conversationId,
             conversationTitle,
             conversationMessages,
             relatedFiles,
@@ -90,9 +114,12 @@ export default class AssistantService extends BaseService {
 
             await this.prismaClient.conversation.create({
                 data: {
+                    userId: model.userId,
                     id: model.conversationId,
                     threadId,
                     title: conversationTitle,
+                    createdAt: new Date(),
+                    archived: false,
                 },
             });
         } else {
@@ -106,6 +133,7 @@ export default class AssistantService extends BaseService {
                 content: model.content,
                 conversationId: model.conversationId,
                 role: 'user',
+                createdAt: new Date(),
             },
         });
 
@@ -162,6 +190,7 @@ export default class AssistantService extends BaseService {
                 conversationId: model.conversationId,
                 role: 'assistant',
                 annotations: JSON.stringify(distinctAnnotations),
+                createdAt: new Date(),
             },
         });
 
@@ -207,100 +236,5 @@ export default class AssistantService extends BaseService {
             return true;
         });
     }
-
-    // async oldSendMessage(
-    //     model: SendMessageRequestModel,
-    // ): Promise<SendMessageResponseModel> {
-    //     const conversationSoFar: Message[] =
-    //         await this.prismaClient.messages.findMany({
-    //             where: { conversationId: model.conversationId },
-    //         });
-
-    //     const incomingUserMessage: Message =
-    //         await this.prismaClient.messages.create({
-    //             data: {
-    //                 content: model.content,
-    //                 conversationId: model.conversationId,
-    //                 role: 'user',
-    //             },
-    //         });
-
-    //     conversationSoFar.push(incomingUserMessage);
-
-    //     const completion =
-    //         await this.chatAgent.createCompletionWithTools(conversationSoFar);
-
-    //     if (completion instanceof TextResponse) {
-    //         const response: Message = await this.prismaClient.messages.create({
-    //             data: {
-    //                 content: completion.content,
-    //                 conversationId: model.conversationId,
-    //                 role: 'assistant',
-    //             },
-    //         });
-
-    //         return new SendMessageResponseModel(
-    //             response.id,
-    //             response.content,
-    //             response.role,
-    //             response.conversationId,
-    //         );
-    //     } else {
-    //         const assistantToolCallResponse: Message =
-    //             await this.prismaClient.messages.create({
-    //                 data: {
-    //                     conversationId: model.conversationId,
-    //                     role: 'assistant',
-    //                     toolCall: {
-    //                         id: completion.toolCall.id,
-    //                         functionName: completion.toolCall.function.name,
-    //                         functionArguments:
-    //                             completion.toolCall.function.arguments,
-    //                     },
-    //                 },
-    //             });
-
-    //         conversationSoFar.push(assistantToolCallResponse);
-
-    //         const toolResponse: Message =
-    //             await this.prismaClient.messages.create({
-    //                 data: {
-    //                     content: completion.response,
-    //                     conversationId: model.conversationId,
-    //                     role: 'tool',
-    //                     toolCall: {
-    //                         id: completion.toolCall.id,
-    //                         functionName: completion.toolCall.function.name,
-    //                         functionArguments:
-    //                             completion.toolCall.function.arguments,
-    //                     },
-    //                 },
-    //             });
-
-    //         conversationSoFar.push(toolResponse);
-
-    //         const followUpCompletion =
-    //             await this.chatAgent.createCompletionWithoutTools(
-    //                 conversationSoFar,
-    //             );
-
-    //         const assistantResponse: Message =
-    //             await this.prismaClient.messages.create({
-    //                 data: {
-    //                     content: followUpCompletion.content,
-    //                     conversationId: model.conversationId,
-    //                     role: 'assistant',
-    //                     actions: completion.actions,
-    //                 },
-    //             });
-
-    //         return new SendMessageResponseModel(
-    //             assistantResponse.id,
-    //             assistantResponse.content,
-    //             assistantResponse.role,
-    //             assistantResponse.conversationId,
-    //             assistantResponse.actions,
-    //         );
-    //     }
     // }
 }

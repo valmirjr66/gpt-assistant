@@ -42,13 +42,17 @@ model Messages {
   toolCall       ToolCall?
   actions        Action[]
   annotations    String?
+  createdAt      DateTime
 }
 
 model Conversation {
   id               String   @id @map("_id")
+  userId           String
   threadId         String?
   title            String
   referenceFileIds String[]
+  createdAt        DateTime
+  archived         Boolean  @default(false)
 }
 
 model FileReference {
