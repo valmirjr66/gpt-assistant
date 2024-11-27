@@ -4,6 +4,6 @@ import { TelegramController } from './modules/telegram/TelegramController';
 
 @Module({
     imports: [AssistantModule],
-    controllers: [TelegramController]
+    controllers: [TelegramController],
 })
-export class AppModule { }
+export class AppModule {}

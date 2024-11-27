@@ -14,7 +14,9 @@ async function bootstrap() {
 
     const config = new DocumentBuilder()
         .setTitle('Generic Generative AI API')
-        .setDescription('This is a RESTful API created to interface with a generic gen AI')
+        .setDescription(
+            'This is a RESTful API created to interface with a generic gen AI',
+        )
         .setVersion('1.0')
         .addTag('Assistant')
         .build();

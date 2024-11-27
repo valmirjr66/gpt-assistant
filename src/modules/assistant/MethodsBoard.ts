@@ -6,7 +6,7 @@ import { Action } from 'src/types/gpt';
 
 export type MethodsBoard = {
     header: ChatCompletionTool;
-    callback: (...args: any[]) => Promise<{ data: Object; actions?: Action[] }>;
+    callback: (...args: any[]) => Promise<{ data: object; actions?: Action[] }>;
 }[];
 
 function getRandomItemFromArray<T>(array: T[]): T {

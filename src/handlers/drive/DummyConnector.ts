@@ -19,17 +19,17 @@ export default class DummyConnector {
     private readonly files: Record<string, string> = {
         'directory/document.txt': 'foobar',
         'directory/video.mp4': '',
-        'directory/document.fake.pdf': ''
-    }
+        'directory/document.fake.pdf': '',
+    };
 
-    constructor() { }
+    constructor() {}
 
     async list(): Promise<string[]> {
         return Promise.resolve(Object.keys(this.files));
     }
 
     async readFile(path: string): Promise<Buffer> {
-        const fileContent = this.files[path]
+        const fileContent = this.files[path];
         return Promise.resolve(Buffer.from(fileContent, 'binary'));
     }
 }
