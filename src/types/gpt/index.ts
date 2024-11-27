@@ -20,12 +20,14 @@ export type Message = {
     content?: string;
     toolCall?: ToolCall;
     actions: Action[];
+    createdAt: Date;
 };
 
 export type Conversation = {
     id: string;
     title: string;
     messages: Message[];
+    createdAt: Date;
 };
 
 export type Annotation = {

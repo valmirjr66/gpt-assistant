@@ -42,6 +42,7 @@ model Messages {
   toolCall       ToolCall?
   actions        Action[]
   annotations    String?
+  createdAt      DateTime
 }
 
 model Conversation {
@@ -50,6 +51,7 @@ model Conversation {
   threadId         String?
   title            String
   referenceFileIds String[]
+  createdAt        DateTime
 }
 
 model FileReference {

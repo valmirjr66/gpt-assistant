@@ -31,6 +31,7 @@ export default class AssistantService extends BaseService {
             response.map((item) => ({
                 id: item.id,
                 title: item.title,
+                createdAt: item.createdAt,
             })),
         );
     }
@@ -110,6 +111,7 @@ export default class AssistantService extends BaseService {
                     id: model.conversationId,
                     threadId,
                     title: conversationTitle,
+                    createdAt: new Date(),
                 },
             });
         } else {
@@ -123,6 +125,7 @@ export default class AssistantService extends BaseService {
                 content: model.content,
                 conversationId: model.conversationId,
                 role: 'user',
+                createdAt: new Date(),
             },
         });
 
@@ -179,6 +182,7 @@ export default class AssistantService extends BaseService {
                 conversationId: model.conversationId,
                 role: 'assistant',
                 annotations: JSON.stringify(distinctAnnotations),
+                createdAt: new Date(),
             },
         });
 
