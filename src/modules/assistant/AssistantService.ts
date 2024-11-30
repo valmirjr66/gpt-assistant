@@ -6,7 +6,7 @@ import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequ
 import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageResponseModel';
 import { Annotation, Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
-import GetConversationsByUserIdModel from './model/GetConversationsByUserIdModel';
+import GetConversationsByUserIdResponseModel from './model/GetConversationsByUserIdResponseModel';
 import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
 
 @Injectable()
@@ -29,12 +29,12 @@ export default class AssistantService extends BaseService {
 
     async getConversationsByUserId(
         userId?: string,
-    ): Promise<GetConversationsByUserIdModel> {
+    ): Promise<GetConversationsByUserIdResponseModel> {
         const response = await this.prismaClient.conversation.findMany({
             where: { userId, archived: false },
         });
 
-        return new GetConversationsByUserIdModel(
+        return new GetConversationsByUserIdResponseModel(
             response.map((item) => ({
                 id: item.id,
                 title: item.title,

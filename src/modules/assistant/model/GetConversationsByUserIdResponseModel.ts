@@ -1,6 +1,6 @@
 import { Conversation } from 'src/types/gpt';
 
-export default class GetConversationsByUserIdDto {
+export default class GetConversationsByUserIdResponseModel {
     conversations: Omit<Conversation, 'messages'>[];
 
     constructor(conversations: Omit<Conversation, 'messages'>[]) {

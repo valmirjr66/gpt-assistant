@@ -19,7 +19,7 @@ import SendMessageRequestDto from 'src/modules/assistant/dto/SendMessageRequestD
 import BaseController from '../../BaseController';
 import AssistantService from './AssistantService';
 import GetConversationResponseDto from './dto/GetConversationResponseDto';
-import GetConversationsByUserIdDto from './dto/GetConversationsByUserIdDto';
+import GetConversationsByUserIdResponseDto from './dto/GetConversationsByUserIdResponseDto';
 import GetFileMetadataResponseDto from './dto/GetFileMetadataResponseDto';
 import SendMessageResponseDto from './dto/SendMessageResponseDto';
 
@@ -38,7 +38,7 @@ export default class AssistantController extends BaseController {
     })
     async getConversationsByUserId(
         @Headers('userId') userId?: string,
-    ): Promise<GetConversationsByUserIdDto> {
+    ): Promise<GetConversationsByUserIdResponseDto> {
         const response = await this.assistantService.getConversationsByUserId(
             userId || 'anonymous',
         );
