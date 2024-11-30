@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import OpenAI from 'openai';
 import { FileCitationAnnotation } from 'openai/resources/beta/threads/messages.mjs';
 import {
@@ -33,6 +34,7 @@ export class TextResponse {
 }
 
 export default class ChatAssistant {
+    private logger: Logger = new Logger('ChatAssistant');
     private readonly assistantId: string;
     private readonly openaiClient: OpenAI = new OpenAI({
         apiKey: process.env.OPENAI_SECRET_KEY,
@@ -84,13 +86,9 @@ export default class ChatAssistant {
                 responseContent[0].text.annotations as FileCitationAnnotation[],
             );
         } else {
-            console.log(
-                "Run status was: '",
-                run.status,
-                "' on thread ",
-                threadId,
-                '. Error is as following:\n',
-                run.last_error,
+            this.logger.log(
+                `Run status was: '${run.status}' on thread ${threadId}.
+                Error is as following: ${run.last_error}`,
             );
 
             throw new Error("Run wasn't completed");
