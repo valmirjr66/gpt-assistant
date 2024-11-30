@@ -1,6 +1,9 @@
 import { Logger } from '@nestjs/common';
 import OpenAI from 'openai';
-import { FileCitationAnnotation } from 'openai/resources/beta/threads/messages.mjs';
+import {
+    FileCitationAnnotation,
+    TextContentBlock,
+} from 'openai/resources/beta/threads/messages.mjs';
 import {
     ChatCompletionMessageToolCall,
     FileObject,
@@ -93,6 +96,44 @@ export default class ChatAssistant {
 
             throw new Error("Run wasn't completed");
         }
+    }
+
+    public async addMessageToThreadByStream(
+        threadId: string,
+        message: string,
+        streamingCallback: (snapshot: string) => void,
+    ): Promise<TextResponse> {
+        await this.openaiClient.beta.threads.messages.create(threadId, {
+            role: 'user',
+            content: message,
+        });
+
+        let response: TextResponse;
+
+        const run = this.openaiClient.beta.threads.runs
+            .stream(threadId, {
+                assistant_id: this.assistantId,
+            })
+            .on('textCreated', () =>
+                this.logger.log(
+                    `textCreated for thread '${threadId}' with message '${message}'`,
+                ),
+            )
+            .on('textDelta', (_textDelta, snapshot) =>
+                streamingCallback(snapshot.value),
+            )
+            .on('messageDone', (message) => {
+                const textContent = message.content[0] as TextContentBlock;
+
+                response = new TextResponse(
+                    textContent.text.value,
+                    textContent.text.annotations as FileCitationAnnotation[],
+                );
+            });
+
+        await run.done();
+
+        return response;
     }
 
     public async getFileById(id: string): Promise<FileObject | null> {

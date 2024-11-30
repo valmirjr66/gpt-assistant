@@ -88,6 +88,7 @@ export default class AssistantService extends BaseService {
 
     async sendMessage(
         model: SendMessageRequestModel,
+        streamingCallback?: (conversationId: string, snapshot: string) => void,
     ): Promise<SendMessageResponseModel> {
         const conversation = await this.prismaClient.conversation.findFirst({
             where: { id: model.conversationId },
@@ -137,11 +138,17 @@ export default class AssistantService extends BaseService {
             },
         });
 
-        const messageAddedToThread =
-            await this.chatAssistant.addMessageToThread(
-                threadId,
-                model.content,
-            );
+        const messageAddedToThread = streamingCallback
+            ? await this.chatAssistant.addMessageToThreadByStream(
+                  threadId,
+                  model.content,
+                  (snapshot: string) =>
+                      streamingCallback(model.conversationId, snapshot),
+              )
+            : await this.chatAssistant.addMessageToThread(
+                  threadId,
+                  model.content,
+              );
 
         let responseContent = messageAddedToThread.content;
 
