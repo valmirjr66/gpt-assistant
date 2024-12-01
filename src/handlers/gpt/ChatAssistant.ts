@@ -116,7 +116,7 @@ export default class ChatAssistant {
             })
             .on('textCreated', () =>
                 this.logger.log(
-                    `textCreated for thread '${threadId}' with message '${message}'`,
+                    `textCreated for thread '${threadId}' with following incoming message '${message}'`,
                 ),
             )
             .on('textDelta', (_textDelta, snapshot) =>
