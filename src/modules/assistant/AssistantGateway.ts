@@ -12,7 +12,7 @@ import AssistantService from './AssistantService';
 import SendMessageRequestDto from './dto/SendMessageRequestDto';
 import SendMessageRequestModel from './model/SendMessageRequestModel';
 
-@WebSocketGateway()
+@WebSocketGateway({ cors: true })
 export class AssistantGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -21,7 +21,7 @@ export class AssistantGateway
     @WebSocketServer() server: Server;
     private logger: Logger = new Logger('ChatGateway');
 
-    @SubscribeMessage('msgToServer')
+    @SubscribeMessage('message')
     handleMessage(client: Socket, payload: SendMessageRequestDto): void {
         this.logger.log(`Handling message from client: ${client.id}`);
 
@@ -34,7 +34,7 @@ export class AssistantGateway
         this.assistantService.sendMessage(
             messageModel,
             (conversationId: string, snapshot: string) => {
-                this.server.emit('msgToClient', { conversationId, snapshot });
+                this.server.emit('message', { conversationId, snapshot });
             },
         );
     }
