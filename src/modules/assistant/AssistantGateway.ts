@@ -33,8 +33,12 @@ export class AssistantGateway
 
         this.assistantService.sendMessage(
             messageModel,
-            (conversationId: string, snapshot: string) => {
-                this.server.emit('message', { conversationId, snapshot });
+            (conversationId: string, snapshot: string, finished: boolean) => {
+                this.server.emit('message', {
+                    conversationId,
+                    snapshot,
+                    finished,
+                });
             },
         );
     }

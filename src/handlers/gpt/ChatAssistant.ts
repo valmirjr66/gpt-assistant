@@ -101,7 +101,7 @@ export default class ChatAssistant {
     public async addMessageToThreadByStream(
         threadId: string,
         message: string,
-        streamingCallback: (snapshot: string) => void,
+        streamingCallback: (snapshot: string, finished: boolean) => void,
     ): Promise<TextResponse> {
         await this.openaiClient.beta.threads.messages.create(threadId, {
             role: 'user',
@@ -120,10 +120,12 @@ export default class ChatAssistant {
                 ),
             )
             .on('textDelta', (_textDelta, snapshot) =>
-                streamingCallback(snapshot.value),
+                streamingCallback(snapshot.value, false),
             )
             .on('messageDone', (message) => {
                 const textContent = message.content[0] as TextContentBlock;
+
+                streamingCallback(textContent.text.value, true);
 
                 response = new TextResponse(
                     textContent.text.value,
