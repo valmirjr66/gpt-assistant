@@ -117,7 +117,7 @@ def baixa_video(x):
     registro = {
         "fileId": id_file,
         "downloadURL": url,
-        "displaName": display_name,
+        "displayName": display_name,
         "previewImageURL": preview_url,
     }
     inst_mongo.insere_arquivos(registro)

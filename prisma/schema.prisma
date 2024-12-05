@@ -55,10 +55,10 @@ model Conversation {
   archived         Boolean  @default(false)
 }
 
-model FileReference {
+model FileMetadata {
   id              String  @id @map("_id")
   fileId          String?
   downloadURL     String?
-  displayName     String? @map("displaName")
+  displayName     String?
   previewImageURL String?
 }
