@@ -62,3 +62,9 @@ model FileMetadata {
   displayName     String?
   previewImageURL String?
 }
+
+model References {
+  id             String @id @map("_id")
+  conversationId String
+  fileMetadataId String
+}

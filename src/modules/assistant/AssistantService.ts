@@ -4,10 +4,11 @@ import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
 import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequestModel';
 import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageResponseModel';
-import { Annotation, Conversation, Message } from 'src/types/gpt';
+import { Annotation, Conversation, Message, Reference } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import GetConversationsByUserIdResponseModel from './model/GetConversationsByUserIdResponseModel';
 import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
+import GetReferencesByConversationIdResponseModel from './model/GetReferencesByConversationIdResponseModel';
 
 @Injectable()
 export default class AssistantService extends BaseService {
@@ -28,7 +29,7 @@ export default class AssistantService extends BaseService {
     }
 
     async getConversationsByUserId(
-        userId?: string,
+        userId: string,
     ): Promise<GetConversationsByUserIdResponseModel> {
         const response = await this.prismaClient.conversation.findMany({
             where: { userId, archived: false },
@@ -43,6 +44,32 @@ export default class AssistantService extends BaseService {
         );
     }
 
+    async getReferencesByConversationId(
+        conversationId: string,
+    ): Promise<GetReferencesByConversationIdResponseModel> {
+        const response = await this.prismaClient.references.findMany({
+            where: { id: conversationId },
+        });
+
+        const references: Reference[] = [];
+
+        for (const item of response) {
+            const relatedFileMetadata =
+                await this.prismaClient.fileMetadata.findFirst({
+                    where: { id: item.fileMetadataId },
+                });
+
+            references.push({
+                fileId: relatedFileMetadata.fileId,
+                displayName: relatedFileMetadata.displayName,
+                downloadURL: relatedFileMetadata.downloadURL,
+                previewImageURL: relatedFileMetadata.previewImageURL,
+            });
+        }
+
+        return new GetReferencesByConversationIdResponseModel(references);
+    }
+
     async getConversationById(
         conversationId: string,
     ): Promise<GetConversationResponseModel> {
@@ -53,7 +80,7 @@ export default class AssistantService extends BaseService {
                 })
             )?.referenceFileIds || [];
 
-        const relatedFiles = await this.prismaClient.fileReference.findMany({
+        const relatedFiles = await this.prismaClient.fileMetadata.findMany({
             where: { fileId: { in: referenceFileIds } },
         });
 
@@ -231,7 +258,7 @@ export default class AssistantService extends BaseService {
 
         if (!file) return null;
 
-        const fileReference = await this.prismaClient.fileReference.findFirst({
+        const fileMetadata = await this.prismaClient.fileMetadata.findFirst({
             where: { fileId: id },
         });
 
@@ -240,7 +267,7 @@ export default class AssistantService extends BaseService {
             bytes: file.bytes,
             created_at: file.created_at,
             filename: file.filename,
-            downloadURL: fileReference?.downloadURL,
+            downloadURL: fileMetadata?.downloadURL,
         });
     }
 
@@ -264,16 +291,16 @@ export default class AssistantService extends BaseService {
 
         for (let i = 0; i < distinctAnnotations.length; i++) {
             if (decorateAnnotations) {
-                const fileReference =
-                    await this.prismaClient.fileReference.findFirst({
+                const fileMetadata =
+                    await this.prismaClient.fileMetadata.findFirst({
                         where: {
                             fileId: distinctAnnotations[i].file_citation
                                 .file_id,
                         },
                     });
 
-                distinctAnnotations[i].downloadURL = fileReference?.downloadURL;
-                distinctAnnotations[i].displayName = fileReference?.displayName;
+                distinctAnnotations[i].downloadURL = fileMetadata?.downloadURL;
+                distinctAnnotations[i].displayName = fileMetadata?.displayName;
             }
 
             prettifiedTextContent = prettifiedTextContent.replaceAll(

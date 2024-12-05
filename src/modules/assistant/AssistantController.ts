@@ -21,6 +21,7 @@ import AssistantService from './AssistantService';
 import GetConversationResponseDto from './dto/GetConversationResponseDto';
 import GetConversationsByUserIdResponseDto from './dto/GetConversationsByUserIdResponseDto';
 import GetFileMetadataResponseDto from './dto/GetFileMetadataResponseDto';
+import GetReferencesByConversationIdResponseDto from './dto/GetReferencesByConversationIdResponseDto';
 import SendMessageResponseDto from './dto/SendMessageResponseDto';
 
 @ApiTags('Assistant')
@@ -98,6 +99,21 @@ export default class AssistantController extends BaseController {
         @Param('id') id: string,
     ): Promise<GetFileMetadataResponseDto> {
         const response = await this.assistantService.getFileMetadataById(id);
+        this.validateGetResponse(response);
+        return response;
+    }
+
+    @Get('/conversations/:id')
+    @ApiOkResponse({ description: ResponseDescriptions.OK })
+    @ApiNoContentResponse({ description: ResponseDescriptions.NO_CONTENT })
+    @ApiInternalServerErrorResponse({
+        description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+    })
+    async getReferencesByConversationId(
+        @Param('id') id: string,
+    ): Promise<GetReferencesByConversationIdResponseDto> {
+        const response =
+            await this.assistantService.getReferencesByConversationId(id);
         this.validateGetResponse(response);
         return response;
     }
