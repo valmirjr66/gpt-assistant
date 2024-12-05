@@ -4,7 +4,7 @@ import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
 import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequestModel';
 import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageResponseModel';
-import { Annotation, Message } from 'src/types/gpt';
+import { Annotation, Conversation, Message } from 'src/types/gpt';
 import BaseService from '../../BaseService';
 import GetConversationsByUserIdResponseModel from './model/GetConversationsByUserIdResponseModel';
 import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
@@ -90,8 +90,12 @@ export default class AssistantService extends BaseService {
         model: SendMessageRequestModel,
         streamingCallback?: (
             conversationId: string,
-            snapshot: string,
+            textSnapshot: string,
+            annotationsSnapshot: Annotation[],
             finished: boolean,
+        ) => void,
+        newConversationCallback?: (
+            conversation: Omit<Conversation, 'messages'>,
         ) => void,
     ): Promise<SendMessageResponseModel> {
         const conversation = await this.prismaClient.conversation.findFirst({
@@ -117,16 +121,25 @@ export default class AssistantService extends BaseService {
 
             conversationReferences = [];
 
+            const currentDate = new Date();
+
             await this.prismaClient.conversation.create({
                 data: {
                     userId: model.userId,
                     id: model.conversationId,
                     threadId,
                     title: conversationTitle,
-                    createdAt: new Date(),
+                    createdAt: currentDate,
                     archived: false,
                 },
             });
+
+            newConversationCallback &&
+                newConversationCallback({
+                    id: model.conversationId,
+                    title: conversationTitle,
+                    createdAt: currentDate,
+                });
         } else {
             threadId = conversation.threadId;
             conversationTitle = conversation.title;
@@ -146,46 +159,37 @@ export default class AssistantService extends BaseService {
             ? await this.chatAssistant.addMessageToThreadByStream(
                   threadId,
                   model.content,
-                  (snapshot: string, finished: boolean) =>
+                  async (
+                      textSnapshot: string,
+                      annotationsSnapshot: Annotation[],
+                      finished: boolean,
+                  ) => {
+                      const { distinctAnnotations, prettifiedTextContent } =
+                          await this.prettifyTextAndAnnotations(
+                              textSnapshot,
+                              annotationsSnapshot,
+                              false,
+                          );
+
                       streamingCallback(
                           model.conversationId,
-                          snapshot,
+                          prettifiedTextContent,
+                          distinctAnnotations,
                           finished,
-                      ),
+                      );
+                  },
               )
             : await this.chatAssistant.addMessageToThread(
                   threadId,
                   model.content,
               );
 
-        let responseContent = messageAddedToThread.content;
-
-        const annotations = messageAddedToThread.annotations;
-
-        for (const annotation of annotations)
-            responseContent = responseContent.replaceAll(
-                annotation.text,
-                `[${annotation.file_citation.file_id}]`,
+        const { prettifiedTextContent, distinctAnnotations } =
+            await this.prettifyTextAndAnnotations(
+                messageAddedToThread.content,
+                messageAddedToThread.annotations,
+                true,
             );
-
-        const distinctAnnotations = this.getDistinticAnnotations(annotations);
-
-        for (let i = 0; i < distinctAnnotations.length; i++) {
-            const fileReference =
-                await this.prismaClient.fileReference.findFirst({
-                    where: {
-                        fileId: distinctAnnotations[i].file_citation.file_id,
-                    },
-                });
-
-            distinctAnnotations[i].downloadURL = fileReference?.downloadURL;
-            distinctAnnotations[i].displayName = fileReference?.displayName;
-
-            responseContent = responseContent.replaceAll(
-                `[${distinctAnnotations[i].file_citation.file_id}]`,
-                `<sup>[${i + 1}]</sup>`,
-            );
-        }
 
         await this.prismaClient.conversation.update({
             where: { id: model.conversationId },
@@ -201,7 +205,7 @@ export default class AssistantService extends BaseService {
 
         const response: Message = await this.prismaClient.messages.create({
             data: {
-                content: responseContent,
+                content: prettifiedTextContent,
                 conversationId: model.conversationId,
                 role: 'assistant',
                 annotations: JSON.stringify(distinctAnnotations),
@@ -216,7 +220,7 @@ export default class AssistantService extends BaseService {
             response.conversationId,
             conversationTitle,
             [],
-            annotations,
+            distinctAnnotations,
         );
     }
 
@@ -238,6 +242,47 @@ export default class AssistantService extends BaseService {
             filename: file.filename,
             downloadURL: fileReference?.downloadURL,
         });
+    }
+
+    private async prettifyTextAndAnnotations(
+        textContent: string,
+        annotations: Annotation[],
+        decorateAnnotations: boolean,
+    ): Promise<{
+        prettifiedTextContent: string;
+        distinctAnnotations: Annotation[];
+    }> {
+        let prettifiedTextContent = textContent;
+
+        for (const annotation of annotations)
+            prettifiedTextContent = prettifiedTextContent.replaceAll(
+                annotation.text,
+                `[${annotation.file_citation.file_id}]`,
+            );
+
+        const distinctAnnotations = this.getDistinticAnnotations(annotations);
+
+        for (let i = 0; i < distinctAnnotations.length; i++) {
+            if (decorateAnnotations) {
+                const fileReference =
+                    await this.prismaClient.fileReference.findFirst({
+                        where: {
+                            fileId: distinctAnnotations[i].file_citation
+                                .file_id,
+                        },
+                    });
+
+                distinctAnnotations[i].downloadURL = fileReference?.downloadURL;
+                distinctAnnotations[i].displayName = fileReference?.displayName;
+            }
+
+            prettifiedTextContent = prettifiedTextContent.replaceAll(
+                `[${distinctAnnotations[i].file_citation.file_id}]`,
+                `<sup>[${i + 1}]</sup>`,
+            );
+        }
+
+        return { prettifiedTextContent, distinctAnnotations };
     }
 
     private getDistinticAnnotations(array: Annotation[]): Annotation[] {

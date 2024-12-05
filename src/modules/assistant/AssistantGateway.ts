@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import AssistantService from './AssistantService';
 import SendMessageRequestDto from './dto/SendMessageRequestDto';
 import SendMessageRequestModel from './model/SendMessageRequestModel';
+import { Annotation, Conversation } from 'src/types/gpt';
 
 @WebSocketGateway({ cors: true })
 export class AssistantGateway
@@ -19,7 +20,7 @@ export class AssistantGateway
     constructor(private readonly assistantService: AssistantService) {}
 
     @WebSocketServer() server: Server;
-    private logger: Logger = new Logger('ChatGateway');
+    private logger: Logger = new Logger('AssistantGateway');
 
     @SubscribeMessage('message')
     handleMessage(client: Socket, payload: SendMessageRequestDto): void {
@@ -31,15 +32,28 @@ export class AssistantGateway
             payload.conversationId,
         );
 
+        const streamingCallback = (
+            conversationId: string,
+            textSnapshot: string,
+            annotationsSnapshot: Annotation[],
+            finished: boolean,
+        ) => {
+            this.server.emit('message', {
+                conversationId,
+                textSnapshot,
+                annotationsSnapshot,
+                finished,
+            });
+        };
+
+        const newConversationCallback = (
+            conversation: Omit<Conversation, 'messages'>,
+        ) => this.server.emit('newConversation', conversation);
+
         this.assistantService.sendMessage(
             messageModel,
-            (conversationId: string, snapshot: string, finished: boolean) => {
-                this.server.emit('message', {
-                    conversationId,
-                    snapshot,
-                    finished,
-                });
-            },
+            streamingCallback,
+            newConversationCallback,
         );
     }
 
