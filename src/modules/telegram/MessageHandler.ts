@@ -2,7 +2,7 @@ import axiosInstance from './TelegramService';
 
 async function getChatAnswer(messageObj, messageText) {
     return await axiosInstance.sendChatMessage(
-        'api/assistant/conversation/message',
+        'api/assistant/conversations/message',
         {
             role: 'user',
             content: messageText,
