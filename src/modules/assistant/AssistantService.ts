@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import ChatAssistant from 'src/handlers/gpt/ChatAssistant';
@@ -16,6 +16,8 @@ import { Message } from './schemas/MessageSchema';
 
 @Injectable()
 export default class AssistantService extends BaseService {
+    private logger: Logger = new Logger('AssistantService');
+
     constructor(
         @Optional()
         private readonly chatAssistant: ChatAssistant = new ChatAssistant(
@@ -61,7 +63,19 @@ export default class AssistantService extends BaseService {
 
         const references = response?.references;
 
-        return new GetReferencesByConversationIdResponseModel(references || []);
+        const normalizedReferences = references.filter((item) => item);
+
+        if (normalizedReferences.length < references.length) {
+            const diff = normalizedReferences.length - references.length;
+
+            this.logger.warn(
+                `${diff} nullish values were removed, but they shouldn't be here, right? 🤔`,
+            );
+        }
+
+        return new GetReferencesByConversationIdResponseModel(
+            normalizedReferences || [],
+        );
     }
 
     async getConversationById(
@@ -80,7 +94,6 @@ export default class AssistantService extends BaseService {
             conversationId,
             conversation.title,
             conversationMessages,
-            conversation.references,
         );
 
         return response;
