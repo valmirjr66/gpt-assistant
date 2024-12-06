@@ -1,16 +1,17 @@
-import { Message, Reference } from 'src/types/gpt';
+import { FileMetadata } from '../schemas/FileMetadataSchema';
+import { Message } from '../schemas/MessageSchema';
 
 export default class GetConversationResponseDto {
     id: string;
     title: string;
     messages: Message[];
-    references: Reference[];
+    references: FileMetadata[];
 
     constructor(
         id: string,
         title: string,
         messages: Message[],
-        references: Reference[],
+        references: FileMetadata[],
     ) {
         this.id = id;
         this.title = title;

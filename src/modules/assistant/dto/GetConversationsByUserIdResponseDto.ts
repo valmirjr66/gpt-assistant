@@ -1,9 +1,9 @@
-import { Conversation } from 'src/types/gpt';
+import { SimplifiedConversation } from 'src/types/gpt';
 
 export default class GetConversationsByUserIdResponseDto {
-    conversations: Omit<Conversation, 'messages'>[];
+    conversations: SimplifiedConversation[];
 
-    constructor(conversations: Omit<Conversation, 'messages'>[]) {
+    constructor(conversations: SimplifiedConversation[]) {
         this.conversations = conversations;
     }
 }

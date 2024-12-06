@@ -1,30 +1,8 @@
 import { Logger } from '@nestjs/common';
 import OpenAI from 'openai';
-import {
-    FileCitationAnnotation,
-    TextContentBlock,
-} from 'openai/resources/beta/threads/messages.mjs';
-import {
-    ChatCompletionMessageToolCall,
-    FileObject,
-} from 'openai/resources/index.mjs';
-import { Action, Annotation } from 'src/types/gpt';
-
-export class MethodResponse {
-    constructor(
-        toolCall: ChatCompletionMessageToolCall,
-        response: string,
-        actions: Action[] = [],
-    ) {
-        this.toolCall = toolCall;
-        this.response = response;
-        this.actions = actions;
-    }
-
-    toolCall: ChatCompletionMessageToolCall;
-    response: string;
-    actions: Action[];
-}
+import { TextContentBlock } from 'openai/resources/beta/threads/messages.mjs';
+import { FileObject } from 'openai/resources/index.mjs';
+import { Annotation } from 'src/types/gpt';
 
 export class TextResponse {
     constructor(content: string, annotations?: Annotation[]) {
@@ -86,7 +64,7 @@ export default class ChatAssistant {
 
             return new TextResponse(
                 responseContent[0].text.value,
-                responseContent[0].text.annotations as FileCitationAnnotation[],
+                responseContent[0].text.annotations as Annotation[],
             );
         } else {
             this.logger.log(
@@ -128,7 +106,7 @@ export default class ChatAssistant {
                 async (_textDelta, snapshot) =>
                     await streamingCallback(
                         snapshot.value,
-                        snapshot.annotations as FileCitationAnnotation[],
+                        snapshot.annotations as Annotation[],
                         false,
                     ),
             )
@@ -137,13 +115,13 @@ export default class ChatAssistant {
 
                 await streamingCallback(
                     textContent.text.value,
-                    textContent.text.annotations as FileCitationAnnotation[],
+                    textContent.text.annotations as Annotation[],
                     true,
                 );
 
                 response = new TextResponse(
                     textContent.text.value,
-                    textContent.text.annotations as FileCitationAnnotation[],
+                    textContent.text.annotations as Annotation[],
                 );
             });
 

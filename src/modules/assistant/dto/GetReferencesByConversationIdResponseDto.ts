@@ -1,9 +1,9 @@
-import { Reference } from 'src/types/gpt';
+import { FileMetadata } from '../schemas/FileMetadataSchema';
 
 export default class GetReferencesByConversationIdResponseDto {
-    references: Reference[];
+    references: FileMetadata[];
 
-    constructor(references: Reference[]) {
+    constructor(references: FileMetadata[]) {
         this.references = references;
     }
 }
