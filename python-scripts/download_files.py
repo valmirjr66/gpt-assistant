@@ -23,9 +23,9 @@ PASTA_FILES = f"{PASTA_SCRIPTS}/files"
 PASTA_PREVIEWS = f"{PASTA_SCRIPTS}/previews"
 CHAVE_ACESSO = f"{PASTA_SCRIPTS}/chave.json"
 DAYS_EXPIRE = 100
-file_ids = []
 
-extensoes = ["pdf", "doc", "docx"]
+EXTENSOES = ("pdf", "doc", "docx")
+file_ids = []
 
 
 def baixa_video(x):
@@ -45,7 +45,7 @@ def baixa_video(x):
 
     extensao = file_name.split(".")[-1]
 
-    if extensao not in extensoes:
+    if extensao not in EXTENSOES:
         return
 
     if redirect:
@@ -103,7 +103,8 @@ def baixa_video(x):
     inst_cloud.upload_blob(blob_name, converted_path)
 
     with open(converted_path, "rb") as file:
-        uploaded_file = inst_openai.files.create(file=file, purpose="assistants")
+        uploaded_file = inst_openai.files.create(
+            file=file, purpose="assistants")
 
     id_file = uploaded_file.id
     file_ids.append(id_file)
