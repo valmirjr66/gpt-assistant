@@ -8,9 +8,6 @@ export type ConversationDocument = HydratedDocument<Conversation>;
 @Schema({ timestamps: true })
 export class Conversation extends BaseSchema {
     @Prop({ required: true })
-    _id: string;
-
-    @Prop({ required: true })
     userId: string;
 
     @Prop()

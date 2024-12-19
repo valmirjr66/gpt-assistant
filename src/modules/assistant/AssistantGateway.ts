@@ -36,13 +36,11 @@ export class AssistantGateway
         const streamingCallback = (
             conversationId: string,
             textSnapshot: string,
-            referencesSnapshot: FileMetadata[],
             finished: boolean,
         ) => {
             this.server.emit('message', {
                 conversationId,
                 textSnapshot,
-                referencesSnapshot,
                 finished,
             });
         };
@@ -51,10 +49,14 @@ export class AssistantGateway
             conversation: SimplifiedConversation,
         ) => this.server.emit('newConversation', conversation);
 
+        const referenceSnapshotCallback = (references: FileMetadata[]) =>
+            this.server.emit('referenceSnapshot', references);
+
         this.assistantService.sendMessage(
             messageModel,
             streamingCallback,
             newConversationCallback,
+            referenceSnapshotCallback,
         );
     }
 

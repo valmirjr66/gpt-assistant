@@ -5,6 +5,7 @@ import ChatAssistant from 'src/handlers/gpt/ChatAssistant';
 import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
 import { Annotation, SimplifiedConversation } from 'src/types/gpt';
+import { v4 as uuidv4 } from 'uuid';
 import BaseService from '../../BaseService';
 import GetConversationsByUserIdResponseModel from './model/GetConversationsByUserIdResponseModel';
 import GetReferencesByConversationIdResponseModel from './model/GetReferencesByConversationIdResponseModel';
@@ -63,6 +64,8 @@ export default class AssistantService extends BaseService {
 
         const references = response?.references;
 
+        if (!references) return null;
+
         const normalizedReferences = references.filter((item) => item);
 
         if (normalizedReferences.length < references.length) {
@@ -104,12 +107,12 @@ export default class AssistantService extends BaseService {
         streamingCallback?: (
             conversationId: string,
             textSnapshot: string,
-            referencesSnapshot: FileMetadata[],
             finished: boolean,
         ) => void,
         newConversationCallback?: (
             conversation: SimplifiedConversation,
         ) => void,
+        referenceSnapshotCallback?: (references: FileMetadata[]) => void,
     ): Promise<SendMessageResponseModel> {
         const conversation = await this.conversationModel.findById(
             model.conversationId,
@@ -161,6 +164,7 @@ export default class AssistantService extends BaseService {
         }
 
         await this.messageModel.create({
+            _id: uuidv4(),
             content: model.content,
             conversationId: model.conversationId,
             role: 'user',
@@ -182,10 +186,13 @@ export default class AssistantService extends BaseService {
                               false,
                           );
 
+                      if (distinctReferences && distinctReferences.length > 0) {
+                          referenceSnapshotCallback(distinctReferences);
+                      }
+
                       streamingCallback(
                           model.conversationId,
                           prettifiedTextContent,
-                          distinctReferences,
                           finished,
                       );
                   },
@@ -202,12 +209,15 @@ export default class AssistantService extends BaseService {
                 true,
             );
 
+        streamingCallback(model.conversationId, prettifiedTextContent, true);
+
         await this.conversationModel.updateOne(
             { _id: model.conversationId },
             { references: [...conversationReferences, ...distinctReferences] },
         );
 
         const response = await this.messageModel.create({
+            _id: uuidv4(),
             content: prettifiedTextContent,
             conversationId: model.conversationId,
             role: 'assistant',
