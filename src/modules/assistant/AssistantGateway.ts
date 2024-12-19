@@ -8,10 +8,11 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { SimplifiedConversation } from 'src/types/gpt';
 import AssistantService from './AssistantService';
 import SendMessageRequestDto from './dto/SendMessageRequestDto';
 import SendMessageRequestModel from './model/SendMessageRequestModel';
-import { Annotation, Conversation } from 'src/types/gpt';
+import { FileMetadata } from './schemas/FileMetadataSchema';
 
 @WebSocketGateway({ cors: true })
 export class AssistantGateway
@@ -35,25 +36,27 @@ export class AssistantGateway
         const streamingCallback = (
             conversationId: string,
             textSnapshot: string,
-            annotationsSnapshot: Annotation[],
             finished: boolean,
         ) => {
             this.server.emit('message', {
                 conversationId,
                 textSnapshot,
-                annotationsSnapshot,
                 finished,
             });
         };
 
         const newConversationCallback = (
-            conversation: Omit<Conversation, 'messages'>,
+            conversation: SimplifiedConversation,
         ) => this.server.emit('newConversation', conversation);
+
+        const referenceSnapshotCallback = (references: FileMetadata[]) =>
+            this.server.emit('referenceSnapshot', references);
 
         this.assistantService.sendMessage(
             messageModel,
             streamingCallback,
             newConversationCallback,
+            referenceSnapshotCallback,
         );
     }
 

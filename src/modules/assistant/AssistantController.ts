@@ -15,12 +15,12 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
-import SendMessageRequestDto from 'src/modules/assistant/dto/SendMessageRequestDto';
 import BaseController from '../../BaseController';
 import AssistantService from './AssistantService';
 import GetConversationResponseDto from './dto/GetConversationResponseDto';
 import GetConversationsByUserIdResponseDto from './dto/GetConversationsByUserIdResponseDto';
-import GetFileMetadataResponseDto from './dto/GetFileMetadataResponseDto';
+import GetReferencesByConversationIdResponseDto from './dto/GetReferencesByConversationIdResponseDto';
+import SendMessageRequestDto from './dto/SendMessageRequestDto';
 import SendMessageResponseDto from './dto/SendMessageResponseDto';
 
 @ApiTags('Assistant')
@@ -88,16 +88,17 @@ export default class AssistantController extends BaseController {
         return response;
     }
 
-    @Get('/files/:id')
+    @Get('/conversations/:id/references')
     @ApiOkResponse({ description: ResponseDescriptions.OK })
-    @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
+    @ApiNoContentResponse({ description: ResponseDescriptions.NO_CONTENT })
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
-    async getFileMetadataById(
+    async getReferencesByConversationId(
         @Param('id') id: string,
-    ): Promise<GetFileMetadataResponseDto> {
-        const response = await this.assistantService.getFileMetadataById(id);
+    ): Promise<GetReferencesByConversationIdResponseDto> {
+        const response =
+            await this.assistantService.getReferencesByConversationId(id);
         this.validateGetResponse(response);
         return response;
     }

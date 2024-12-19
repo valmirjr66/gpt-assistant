@@ -2,7 +2,7 @@ import axiosInstance from './TelegramService';
 
 async function getChatAnswer(messageObj, messageText) {
     return await axiosInstance.sendChatMessage(
-        'api/assistant/conversation/message',
+        'api/assistant/conversations/message',
         {
             role: 'user',
             content: messageText,
@@ -21,15 +21,15 @@ function sendMessage(messageObj, messageText) {
 function formatMessage(data) {
     let content = data.content.replace(/<sup>/g, '').replace(/<\/sup>/g, '');
 
-    const citations = data.annotations
+    const citations = data.references
         .filter(
-            (annotation) =>
-                annotation.file_citation &&
-                annotation.downloadURL &&
-                annotation.displayName,
+            (reference) =>
+                reference.file_citation &&
+                reference.downloadURL &&
+                reference.displayName,
         )
-        .map((annotation, index) => {
-            return `[${index + 1}]. ${annotation.displayName} - ${annotation.downloadURL}`;
+        .map((reference, index) => {
+            return `[${index + 1}]. ${reference.displayName} - ${reference.downloadURL}`;
         });
 
     content += '\n\n' + citations.join('\n');

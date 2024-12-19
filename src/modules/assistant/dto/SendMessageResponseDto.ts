@@ -1,4 +1,5 @@
-import { Action, Annotation, Role } from 'src/types/gpt';
+import { Role } from 'src/types/gpt';
+import { FileMetadata } from '../schemas/FileMetadataSchema';
 
 export default class SendMessageResponseDto {
     id: string;
@@ -6,8 +7,7 @@ export default class SendMessageResponseDto {
     role: Role;
     conversationId: string;
     conversationTitle: string;
-    actions: Action[];
-    annotations: Annotation[];
+    references: FileMetadata[];
 
     constructor(
         id: string,
@@ -15,15 +15,13 @@ export default class SendMessageResponseDto {
         role: Role,
         conversationId: string,
         conversationTitle: string,
-        actions: Action[] = [],
-        annotations: Annotation[] = [],
+        references: FileMetadata[] = [],
     ) {
         this.id = id;
         this.content = content;
         this.role = role;
         this.conversationId = conversationId;
         this.conversationTitle = conversationTitle;
-        this.actions = actions;
-        this.annotations = annotations;
+        this.references = references;
     }
 }

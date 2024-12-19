@@ -1,86 +1,102 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import ChatAssistant from 'src/handlers/gpt/ChatAssistant';
 import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
-import SendMessageRequestModel from 'src/modules/assistant/model/SendMessageRequestModel';
-import SendMessageResponseModel from 'src/modules/assistant/model/SendMessageResponseModel';
-import { Annotation, Conversation, Message } from 'src/types/gpt';
+import { Annotation, SimplifiedConversation } from 'src/types/gpt';
+import { v4 as uuidv4 } from 'uuid';
 import BaseService from '../../BaseService';
 import GetConversationsByUserIdResponseModel from './model/GetConversationsByUserIdResponseModel';
-import GetFileMetadataResponseModel from './model/GetFileMetadataResponseModel';
+import GetReferencesByConversationIdResponseModel from './model/GetReferencesByConversationIdResponseModel';
+import SendMessageRequestModel from './model/SendMessageRequestModel';
+import SendMessageResponseModel from './model/SendMessageResponseModel';
+import { Conversation } from './schemas/ConversationSchema';
+import { FileMetadata } from './schemas/FileMetadataSchema';
+import { Message } from './schemas/MessageSchema';
 
 @Injectable()
 export default class AssistantService extends BaseService {
+    private logger: Logger = new Logger('AssistantService');
+
     constructor(
         @Optional()
         private readonly chatAssistant: ChatAssistant = new ChatAssistant(
             process.env.ASSISTANT_ID,
         ),
+        @InjectModel(Message.name)
+        private readonly messageModel: Model<Message>,
+        @InjectModel(Conversation.name)
+        private readonly conversationModel: Model<Conversation>,
+        @InjectModel(FileMetadata.name)
+        private readonly fileMetadataModel: Model<FileMetadata>,
     ) {
         super();
     }
 
     async deleteConversationById(id: string) {
-        await this.prismaClient.conversation.update({
-            data: { archived: true },
-            where: { id },
-        });
+        await this.conversationModel.updateOne({ _id: id }, { archived: true });
     }
 
     async getConversationsByUserId(
-        userId?: string,
+        userId: string,
     ): Promise<GetConversationsByUserIdResponseModel> {
-        const response = await this.prismaClient.conversation.findMany({
-            where: { userId, archived: false },
+        const response = await this.conversationModel.find({
+            userId,
+            archived: false,
         });
 
         return new GetConversationsByUserIdResponseModel(
             response.map((item) => ({
-                id: item.id,
-                title: item.title,
+                _id: item.id,
+                archived: item.archived,
                 createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+                title: item.title,
             })),
+        );
+    }
+
+    async getReferencesByConversationId(
+        conversationId: string,
+    ): Promise<GetReferencesByConversationIdResponseModel> {
+        const response = await this.conversationModel.findById(conversationId);
+
+        const references = response?.references;
+
+        if (!references) return null;
+
+        const normalizedReferences = references.filter((item) => item);
+
+        if (normalizedReferences.length < references.length) {
+            const diff = normalizedReferences.length - references.length;
+
+            this.logger.warn(
+                `${diff} nullish values were removed, but they shouldn't be here, right? 🤔`,
+            );
+        }
+
+        return new GetReferencesByConversationIdResponseModel(
+            normalizedReferences || [],
         );
     }
 
     async getConversationById(
         conversationId: string,
     ): Promise<GetConversationResponseModel> {
-        const referenceFileIds =
-            (
-                await this.prismaClient.conversation.findFirst({
-                    where: { id: conversationId },
-                })
-            )?.referenceFileIds || [];
+        const conversation =
+            await this.conversationModel.findById(conversationId);
 
-        const relatedFiles = await this.prismaClient.fileReference.findMany({
-            where: { fileId: { in: referenceFileIds } },
+        const conversationMessages = await this.messageModel.find({
+            conversationId,
         });
 
-        const conversationMessages: Message[] =
-            await this.prismaClient.messages.findMany({
-                where: {
-                    conversationId: conversationId,
-                    AND: {
-                        NOT: { role: 'tool' },
-                        OR: [{ NOT: { content: null } }],
-                    },
-                },
-            });
-
-        if (!conversationMessages) return null;
-
-        const conversationTitle = (
-            await this.prismaClient.conversation.findUnique({
-                where: { id: conversationId },
-            })
-        )?.title;
+        if (conversationMessages.length === 0) return null;
 
         const response = new GetConversationResponseModel(
             conversationId,
-            conversationTitle,
+            conversation.title,
             conversationMessages,
-            relatedFiles,
         );
 
         return response;
@@ -91,20 +107,20 @@ export default class AssistantService extends BaseService {
         streamingCallback?: (
             conversationId: string,
             textSnapshot: string,
-            annotationsSnapshot: Annotation[],
             finished: boolean,
         ) => void,
         newConversationCallback?: (
-            conversation: Omit<Conversation, 'messages'>,
+            conversation: SimplifiedConversation,
         ) => void,
+        referenceSnapshotCallback?: (references: FileMetadata[]) => void,
     ): Promise<SendMessageResponseModel> {
-        const conversation = await this.prismaClient.conversation.findFirst({
-            where: { id: model.conversationId },
-        });
+        const conversation = await this.conversationModel.findById(
+            model.conversationId,
+        );
 
         let threadId: string;
         let conversationTitle: string;
-        let conversationReferences: string[];
+        let conversationReferences: FileMetadata[];
 
         if (conversation && !conversation.threadId)
             throw new Error('No thread found for the given conversation');
@@ -123,36 +139,35 @@ export default class AssistantService extends BaseService {
 
             const currentDate = new Date();
 
-            await this.prismaClient.conversation.create({
-                data: {
-                    userId: model.userId,
-                    id: model.conversationId,
-                    threadId,
-                    title: conversationTitle,
-                    createdAt: currentDate,
-                    archived: false,
-                },
+            await this.conversationModel.create({
+                _id: model.conversationId,
+                userId: model.userId,
+                title: conversationTitle,
+                threadId: threadId,
+                createdAt: currentDate,
+                updatedAt: currentDate,
+                archived: false,
             });
 
             newConversationCallback &&
                 newConversationCallback({
-                    id: model.conversationId,
+                    _id: model.conversationId,
                     title: conversationTitle,
                     createdAt: currentDate,
+                    updatedAt: currentDate,
+                    archived: false,
                 });
         } else {
             threadId = conversation.threadId;
             conversationTitle = conversation.title;
-            conversationReferences = conversation.referenceFileIds;
+            conversationReferences = conversation.references;
         }
 
-        await this.prismaClient.messages.create({
-            data: {
-                content: model.content,
-                conversationId: model.conversationId,
-                role: 'user',
-                createdAt: new Date(),
-            },
+        await this.messageModel.create({
+            _id: uuidv4(),
+            content: model.content,
+            conversationId: model.conversationId,
+            role: 'user',
         });
 
         const messageAddedToThread = streamingCallback
@@ -164,17 +179,20 @@ export default class AssistantService extends BaseService {
                       annotationsSnapshot: Annotation[],
                       finished: boolean,
                   ) => {
-                      const { distinctAnnotations, prettifiedTextContent } =
+                      const { distinctReferences, prettifiedTextContent } =
                           await this.prettifyTextAndAnnotations(
                               textSnapshot,
                               annotationsSnapshot,
                               false,
                           );
 
+                      if (distinctReferences && distinctReferences.length > 0) {
+                          referenceSnapshotCallback(distinctReferences);
+                      }
+
                       streamingCallback(
                           model.conversationId,
                           prettifiedTextContent,
-                          distinctAnnotations,
                           finished,
                       );
                   },
@@ -184,33 +202,26 @@ export default class AssistantService extends BaseService {
                   model.content,
               );
 
-        const { prettifiedTextContent, distinctAnnotations } =
+        const { prettifiedTextContent, distinctReferences } =
             await this.prettifyTextAndAnnotations(
                 messageAddedToThread.content,
                 messageAddedToThread.annotations,
                 true,
             );
 
-        await this.prismaClient.conversation.update({
-            where: { id: model.conversationId },
-            data: {
-                referenceFileIds: [
-                    ...conversationReferences,
-                    ...distinctAnnotations.map(
-                        (anotation) => anotation.file_citation.file_id,
-                    ),
-                ],
-            },
-        });
+        streamingCallback(model.conversationId, prettifiedTextContent, true);
 
-        const response: Message = await this.prismaClient.messages.create({
-            data: {
-                content: prettifiedTextContent,
-                conversationId: model.conversationId,
-                role: 'assistant',
-                annotations: JSON.stringify(distinctAnnotations),
-                createdAt: new Date(),
-            },
+        await this.conversationModel.updateOne(
+            { _id: model.conversationId },
+            { references: [...conversationReferences, ...distinctReferences] },
+        );
+
+        const response = await this.messageModel.create({
+            _id: uuidv4(),
+            content: prettifiedTextContent,
+            conversationId: model.conversationId,
+            role: 'assistant',
+            references: distinctReferences,
         });
 
         return new SendMessageResponseModel(
@@ -219,38 +230,17 @@ export default class AssistantService extends BaseService {
             response.role,
             response.conversationId,
             conversationTitle,
-            [],
-            distinctAnnotations,
+            distinctReferences,
         );
-    }
-
-    async getFileMetadataById(
-        id: string,
-    ): Promise<GetFileMetadataResponseModel> {
-        const file = await this.chatAssistant.getFileById(id);
-
-        if (!file) return null;
-
-        const fileReference = await this.prismaClient.fileReference.findFirst({
-            where: { fileId: id },
-        });
-
-        return new GetFileMetadataResponseModel({
-            id: file.id,
-            bytes: file.bytes,
-            created_at: file.created_at,
-            filename: file.filename,
-            downloadURL: fileReference?.downloadURL,
-        });
     }
 
     private async prettifyTextAndAnnotations(
         textContent: string,
         annotations: Annotation[],
-        decorateAnnotations: boolean,
+        decorateReferences: boolean,
     ): Promise<{
         prettifiedTextContent: string;
-        distinctAnnotations: Annotation[];
+        distinctReferences: FileMetadata[];
     }> {
         let prettifiedTextContent = textContent;
 
@@ -260,40 +250,43 @@ export default class AssistantService extends BaseService {
                 `[${annotation.file_citation.file_id}]`,
             );
 
-        const distinctAnnotations = this.getDistinticAnnotations(annotations);
+        const distinctFileIds = this.getDistinticFileIds(annotations);
+        const distinctReferences: FileMetadata[] = [];
 
-        for (let i = 0; i < distinctAnnotations.length; i++) {
-            if (decorateAnnotations) {
-                const fileReference =
-                    await this.prismaClient.fileReference.findFirst({
-                        where: {
-                            fileId: distinctAnnotations[i].file_citation
-                                .file_id,
-                        },
-                    });
+        for (let i = 0; i < distinctFileIds.length; i++) {
+            const fileId = distinctFileIds[i];
 
-                distinctAnnotations[i].downloadURL = fileReference?.downloadURL;
-                distinctAnnotations[i].displayName = fileReference?.displayName;
+            if (decorateReferences) {
+                const fileMetadata = await this.fileMetadataModel.findOne({
+                    fileId,
+                });
+
+                distinctReferences.push(fileMetadata);
             }
 
             prettifiedTextContent = prettifiedTextContent.replaceAll(
-                `[${distinctAnnotations[i].file_citation.file_id}]`,
+                `[${fileId}]`,
                 `<sup>[${i + 1}]</sup>`,
             );
         }
 
-        return { prettifiedTextContent, distinctAnnotations };
+        return {
+            prettifiedTextContent,
+            distinctReferences,
+        };
     }
 
-    private getDistinticAnnotations(array: Annotation[]): Annotation[] {
+    private getDistinticFileIds(array: Annotation[]): string[] {
         const seen = new Set();
-        return array.filter((item) => {
-            const value = item.file_citation.file_id;
-            if (seen.has(value)) {
-                return false;
-            }
-            seen.add(value);
-            return true;
-        });
+        return array
+            .filter((item) => {
+                const value = item.file_citation.file_id;
+                if (seen.has(value)) {
+                    return false;
+                }
+                seen.add(value);
+                return true;
+            })
+            .map((item) => item.file_citation.file_id);
     }
 }

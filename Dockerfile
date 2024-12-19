@@ -16,9 +16,8 @@ ARG BUILD_DATE
 ENV BUILD_DATE=${BUILD_DATE}
 
 WORKDIR /usr/src/app
-COPY package.json yarn.lock prisma ./
+COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile && yarn cache clean
-RUN npx prisma generate
 COPY --from=build /usr/src/app/src ./src
 COPY --from=build /usr/src/app/dist ./dist
 EXPOSE 8080
