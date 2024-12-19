@@ -103,7 +103,8 @@ def baixa_video(x):
     inst_cloud.upload_blob(blob_name, converted_path)
 
     with open(converted_path, "rb") as file:
-        uploaded_file = inst_openai.files.create(file=file, purpose="assistants")
+        uploaded_file = inst_openai.files.create(
+            file=file, purpose="assistants")
 
     id_file = uploaded_file.id
     file_ids.append(id_file)
