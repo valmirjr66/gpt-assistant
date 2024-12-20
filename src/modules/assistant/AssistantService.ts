@@ -60,24 +60,31 @@ export default class AssistantService extends BaseService {
 
             const currentDate = new Date();
 
-            await this.conversationModel.create({
-                _id: conversationId,
-                userId: userId,
-                title: conversationTitle,
-                threadId: threadId,
-                createdAt: currentDate,
-                updatedAt: currentDate,
-                status: conversationStatus,
-            });
-
-            newConversationCallback &&
-                newConversationCallback({
+            try {
+                await this.conversationModel.create({
                     _id: conversationId,
+                    userId: userId,
                     title: conversationTitle,
+                    threadId: threadId,
                     createdAt: currentDate,
                     updatedAt: currentDate,
                     status: conversationStatus,
                 });
+
+                newConversationCallback &&
+                    newConversationCallback({
+                        _id: conversationId,
+                        title: conversationTitle,
+                        createdAt: currentDate,
+                        updatedAt: currentDate,
+                        status: conversationStatus,
+                    });
+            } catch {
+                // TODO: there should be a proper strategy to treat this
+                this.logger.error(
+                    'Error while trying to create the conversation',
+                );
+            }
         } else {
             threadId = conversation.threadId;
             conversationTitle = conversation.title;
