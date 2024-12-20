@@ -15,3 +15,5 @@ export type SimplifiedConversation = Omit<
     Conversation,
     'messages' | 'references' | 'threadId' | 'userId'
 >;
+
+export type ConversationStatus = 'created' | 'active' | 'archived';
