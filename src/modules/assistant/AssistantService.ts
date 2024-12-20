@@ -4,9 +4,14 @@ import { Model } from 'mongoose';
 import ChatAssistant from 'src/handlers/gpt/ChatAssistant';
 import SimpleAgent from 'src/handlers/gpt/SimpleAgent';
 import GetConversationResponseModel from 'src/modules/assistant/model/GetConversationResponseModel';
-import { Annotation, SimplifiedConversation } from 'src/types/gpt';
+import {
+    Annotation,
+    ConversationStatus,
+    SimplifiedConversation,
+} from 'src/types/gpt';
 import { v4 as uuidv4 } from 'uuid';
 import BaseService from '../../BaseService';
+import ConversationHandshakeResponseModel from './model/ConversationHandshakeResponseModel';
 import GetConversationsByUserIdResponseModel from './model/GetConversationsByUserIdResponseModel';
 import GetReferencesByConversationIdResponseModel from './model/GetReferencesByConversationIdResponseModel';
 import SendMessageRequestModel from './model/SendMessageRequestModel';
@@ -34,8 +39,59 @@ export default class AssistantService extends BaseService {
         super();
     }
 
+    async conversationHandshake(
+        userId: string,
+        conversationId: string,
+        newConversationCallback?: (
+            conversation: SimplifiedConversation,
+        ) => void,
+    ): Promise<ConversationHandshakeResponseModel> {
+        const conversation =
+            await this.conversationModel.findById(conversationId);
+
+        let threadId: string;
+        let conversationTitle: string;
+        let conversationStatus: ConversationStatus;
+
+        if (!conversation) {
+            threadId = await this.chatAssistant.startThread();
+            conversationTitle = 'New chat';
+            conversationStatus = 'created';
+
+            const currentDate = new Date();
+
+            await this.conversationModel.create({
+                _id: conversationId,
+                userId: userId,
+                title: conversationTitle,
+                threadId: threadId,
+                createdAt: currentDate,
+                updatedAt: currentDate,
+                status: conversationStatus,
+            });
+
+            newConversationCallback &&
+                newConversationCallback({
+                    _id: conversationId,
+                    title: conversationTitle,
+                    createdAt: currentDate,
+                    updatedAt: currentDate,
+                    status: conversationStatus,
+                });
+        } else {
+            threadId = conversation.threadId;
+            conversationTitle = conversation.title;
+            conversationStatus = conversation.status;
+        }
+
+        return new ConversationHandshakeResponseModel(conversationStatus);
+    }
+
     async deleteConversationById(id: string) {
-        await this.conversationModel.updateOne({ _id: id }, { archived: true });
+        await this.conversationModel.updateOne(
+            { _id: id },
+            { status: 'archived' },
+        );
     }
 
     async getConversationsByUserId(
@@ -43,13 +99,13 @@ export default class AssistantService extends BaseService {
     ): Promise<GetConversationsByUserIdResponseModel> {
         const response = await this.conversationModel.find({
             userId,
-            archived: false,
+            status: { $nin: ['archived'] },
         });
 
         return new GetConversationsByUserIdResponseModel(
             response.map((item) => ({
                 _id: item.id,
-                archived: item.archived,
+                status: item.status,
                 createdAt: item.createdAt,
                 updatedAt: item.updatedAt,
                 title: item.title,
@@ -109,7 +165,7 @@ export default class AssistantService extends BaseService {
             textSnapshot: string,
             finished: boolean,
         ) => void,
-        newConversationCallback?: (
+        conversationMetadataUpdateCallback?: (
             conversation: SimplifiedConversation,
         ) => void,
         referenceSnapshotCallback?: (
@@ -121,16 +177,16 @@ export default class AssistantService extends BaseService {
             model.conversationId,
         );
 
-        let threadId: string;
-        let conversationTitle: string;
-        let conversationReferences: FileMetadata[];
-
-        if (conversation && !conversation.threadId)
-            throw new Error('No thread found for the given conversation');
-
         if (!conversation) {
-            threadId = await this.chatAssistant.startThread();
+            return null;
+        }
 
+        const threadId = conversation.threadId;
+        const conversationReferences = conversation.references;
+
+        let conversationTitle: string;
+
+        if (conversation.status === 'created') {
             conversationTitle = await new SimpleAgent(
                 `You are an agent designed to create conversation titles.
                 For each input, always and only respond with a short sentence
@@ -138,32 +194,25 @@ export default class AssistantService extends BaseService {
                 Remember to always write the title in english.`,
             ).createCompletion(model.content);
 
-            conversationReferences = [];
+            await this.conversationModel.updateOne(
+                { _id: model.conversationId },
+                {
+                    title: conversationTitle,
+                    updatedAt: new Date(),
+                    status: 'active',
+                },
+            );
 
-            const currentDate = new Date();
-
-            await this.conversationModel.create({
-                _id: model.conversationId,
-                userId: model.userId,
-                title: conversationTitle,
-                threadId: threadId,
-                createdAt: currentDate,
-                updatedAt: currentDate,
-                archived: false,
-            });
-
-            newConversationCallback &&
-                newConversationCallback({
+            conversationMetadataUpdateCallback &&
+                conversationMetadataUpdateCallback({
                     _id: model.conversationId,
                     title: conversationTitle,
-                    createdAt: currentDate,
-                    updatedAt: currentDate,
-                    archived: false,
+                    createdAt: conversation.createdAt,
+                    updatedAt: conversation.updatedAt,
+                    status: 'active',
                 });
         } else {
-            threadId = conversation.threadId;
             conversationTitle = conversation.title;
-            conversationReferences = conversation.references;
         }
 
         await this.messageModel.create({
@@ -197,10 +246,11 @@ export default class AssistantService extends BaseService {
                       const decoratedAnnotations =
                           await this.decorateAnnotations(annotationsSnapshot);
 
-                      referenceSnapshotCallback(
-                          model.conversationId,
-                          decoratedAnnotations,
-                      );
+                      referenceSnapshotCallback &&
+                          referenceSnapshotCallback(
+                              model.conversationId,
+                              decoratedAnnotations,
+                          );
                   },
               )
             : await this.chatAssistant.addMessageToThread(
@@ -217,17 +267,22 @@ export default class AssistantService extends BaseService {
             messageAddedToThread.annotations,
         );
 
-        conversationReferences = [
+        const updatedConversationReferences = [
             ...conversationReferences,
             ...decoratedAnnotations,
         ];
 
-        streamingCallback(model.conversationId, prettifiedTextContent, true);
+        streamingCallback &&
+            streamingCallback(
+                model.conversationId,
+                prettifiedTextContent,
+                true,
+            );
 
         await this.conversationModel.updateOne(
             { _id: model.conversationId },
             {
-                references: conversationReferences,
+                references: updatedConversationReferences,
             },
         );
 
@@ -245,7 +300,7 @@ export default class AssistantService extends BaseService {
             response.role,
             response.conversationId,
             conversationTitle,
-            conversationReferences,
+            updatedConversationReferences,
         );
     }
 

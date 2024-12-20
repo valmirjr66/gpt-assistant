@@ -10,7 +10,8 @@ import {
 import { Server, Socket } from 'socket.io';
 import { SimplifiedConversation } from 'src/types/gpt';
 import AssistantService from './AssistantService';
-import SendMessageRequestDto from './dto/SendMessageRequestDto';
+import ConversationHandshakeRequestPayload from './events/payloads/ConversationHandshakeRequestPayload';
+import SendMessageRequestPayload from './events/payloads/SendMessageRequestPayload';
 import SendMessageRequestModel from './model/SendMessageRequestModel';
 import { FileMetadata } from './schemas/FileMetadataSchema';
 
@@ -24,7 +25,7 @@ export class AssistantGateway
     private logger: Logger = new Logger('AssistantGateway');
 
     @SubscribeMessage('message')
-    handleMessage(client: Socket, payload: SendMessageRequestDto): void {
+    handleMessage(client: Socket, payload: SendMessageRequestPayload): void {
         this.logger.log(`Handling message from client: ${client.id}`);
 
         const messageModel = new SendMessageRequestModel(
@@ -45,9 +46,9 @@ export class AssistantGateway
             });
         };
 
-        const newConversationCallback = (
+        const conversationMetadataUpdateCallback = (
             conversation: SimplifiedConversation,
-        ) => this.server.emit('newConversation', conversation);
+        ) => this.server.emit('conversationMetadataUpdate', conversation);
 
         const referenceSnapshotCallback = (
             conversationId: string,
@@ -61,8 +62,28 @@ export class AssistantGateway
         this.assistantService.sendMessage(
             messageModel,
             streamingCallback,
-            newConversationCallback,
+            conversationMetadataUpdateCallback,
             referenceSnapshotCallback,
+        );
+    }
+
+    @SubscribeMessage('conversationHandshake')
+    handleHandshake(
+        client: Socket,
+        payload: ConversationHandshakeRequestPayload,
+    ): void {
+        this.logger.log(
+            `Handling conversation handshake from client: ${client.id}`,
+        );
+
+        const newConversationCallback = (
+            conversation: SimplifiedConversation,
+        ) => this.server.emit('newConversation', conversation);
+
+        this.assistantService.conversationHandshake(
+            client.handshake.headers.userid as string,
+            payload.conversationId,
+            newConversationCallback,
         );
     }
 

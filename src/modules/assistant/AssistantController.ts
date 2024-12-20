@@ -8,6 +8,7 @@ import {
     Post,
 } from '@nestjs/common';
 import {
+    ApiBadRequestResponse,
     ApiInternalServerErrorResponse,
     ApiNoContentResponse,
     ApiNotFoundResponse,
@@ -17,6 +18,7 @@ import {
 import ResponseDescriptions from 'src/constants/ResponseDescriptions';
 import BaseController from '../../BaseController';
 import AssistantService from './AssistantService';
+import ConversationHandshakeResponseDto from './dto/ConversationHandshakeResponseDto';
 import GetConversationResponseDto from './dto/GetConversationResponseDto';
 import GetConversationsByUserIdResponseDto from './dto/GetConversationsByUserIdResponseDto';
 import GetReferencesByConversationIdResponseDto from './dto/GetReferencesByConversationIdResponseDto';
@@ -56,6 +58,24 @@ export default class AssistantController extends BaseController {
         await this.assistantService.deleteConversationById(id);
     }
 
+    @Post('/conversations/:id/handshake')
+    @ApiOkResponse({ description: ResponseDescriptions.OK })
+    @ApiBadRequestResponse({ description: ResponseDescriptions.BAD_REQUEST })
+    @ApiInternalServerErrorResponse({
+        description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
+    })
+    async conversationHandshake(
+        @Param('id') conversationId: string,
+        @Headers('userId') userId?: string,
+    ): Promise<ConversationHandshakeResponseDto> {
+        const response = await this.assistantService.conversationHandshake(
+            userId,
+            conversationId,
+        );
+
+        return response;
+    }
+
     @Get('/conversations/:id')
     @ApiOkResponse({ description: ResponseDescriptions.OK })
     @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
@@ -70,20 +90,25 @@ export default class AssistantController extends BaseController {
         return response;
     }
 
-    @Post('/conversations/message')
+    @Post('/conversations/:id/message')
     @ApiOkResponse({ description: ResponseDescriptions.CREATED })
-    @ApiNotFoundResponse({ description: ResponseDescriptions.BAD_REQUEST })
+    @ApiBadRequestResponse({ description: ResponseDescriptions.BAD_REQUEST })
+    @ApiNotFoundResponse({ description: ResponseDescriptions.NOT_FOUND })
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
     async sendMessage(
         @Body() dto: SendMessageRequestDto,
+        @Param('id') id: string,
         @Headers('userId') userId?: string,
     ): Promise<SendMessageResponseDto> {
         const response = await this.assistantService.sendMessage({
             ...dto,
             userId: userId || 'anonymous',
+            conversationId: id,
         });
+
+        this.validateGetResponse(response);
 
         return response;
     }
