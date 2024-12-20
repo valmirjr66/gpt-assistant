@@ -83,6 +83,9 @@ export default class ChatAssistant {
             textSnapshot: string,
             annotationsSnapshot: Annotation[],
             finished: boolean,
+        ) => void,
+        referenceSnapshotCallback?: (
+            annotationsSnapshot: Annotation[],
         ) => Promise<void>,
     ): Promise<TextResponse> {
         await this.openaiClient.beta.threads.messages.create(threadId, {
@@ -101,19 +104,17 @@ export default class ChatAssistant {
                     `textCreated for thread '${threadId}' with following incoming message '${message}'`,
                 ),
             )
-            .on(
-                'textDelta',
-                async (_textDelta, snapshot) =>
-                    await streamingCallback(
-                        snapshot.value,
-                        snapshot.annotations as Annotation[],
-                        false,
-                    ),
+            .on('textDelta', (_textDelta, snapshot) =>
+                streamingCallback(
+                    snapshot.value,
+                    snapshot.annotations as Annotation[],
+                    false,
+                ),
             )
             .on('messageDone', async (message) => {
                 const textContent = message.content[0] as TextContentBlock;
 
-                await streamingCallback(
+                streamingCallback(
                     textContent.text.value,
                     textContent.text.annotations as Annotation[],
                     true,
@@ -121,6 +122,10 @@ export default class ChatAssistant {
 
                 response = new TextResponse(
                     textContent.text.value,
+                    textContent.text.annotations as Annotation[],
+                );
+
+                await referenceSnapshotCallback(
                     textContent.text.annotations as Annotation[],
                 );
             });

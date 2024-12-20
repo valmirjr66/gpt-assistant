@@ -112,7 +112,10 @@ export default class AssistantService extends BaseService {
         newConversationCallback?: (
             conversation: SimplifiedConversation,
         ) => void,
-        referenceSnapshotCallback?: (references: FileMetadata[]) => void,
+        referenceSnapshotCallback?: (
+            conversationId: string,
+            references: FileMetadata[],
+        ) => void,
     ): Promise<SendMessageResponseModel> {
         const conversation = await this.conversationModel.findById(
             model.conversationId,
@@ -174,26 +177,29 @@ export default class AssistantService extends BaseService {
             ? await this.chatAssistant.addMessageToThreadByStream(
                   threadId,
                   model.content,
-                  async (
+                  (
                       textSnapshot: string,
                       annotationsSnapshot: Annotation[],
                       finished: boolean,
                   ) => {
-                      const { distinctReferences, prettifiedTextContent } =
-                          await this.prettifyTextAndAnnotations(
-                              textSnapshot,
-                              annotationsSnapshot,
-                              false,
-                          );
-
-                      if (distinctReferences && distinctReferences.length > 0) {
-                          referenceSnapshotCallback(distinctReferences);
-                      }
+                      const prettifiedTextContent = this.prettifyText(
+                          textSnapshot,
+                          annotationsSnapshot,
+                      );
 
                       streamingCallback(
                           model.conversationId,
                           prettifiedTextContent,
                           finished,
+                      );
+                  },
+                  async (annotationsSnapshot: Annotation[]) => {
+                      const decoratedAnnotations =
+                          await this.decorateAnnotations(annotationsSnapshot);
+
+                      referenceSnapshotCallback(
+                          model.conversationId,
+                          decoratedAnnotations,
                       );
                   },
               )
@@ -202,18 +208,27 @@ export default class AssistantService extends BaseService {
                   model.content,
               );
 
-        const { prettifiedTextContent, distinctReferences } =
-            await this.prettifyTextAndAnnotations(
-                messageAddedToThread.content,
-                messageAddedToThread.annotations,
-                true,
-            );
+        const prettifiedTextContent = this.prettifyText(
+            messageAddedToThread.content,
+            messageAddedToThread.annotations,
+        );
+
+        const decoratedAnnotations = await this.decorateAnnotations(
+            messageAddedToThread.annotations,
+        );
+
+        conversationReferences = [
+            ...conversationReferences,
+            ...decoratedAnnotations,
+        ];
 
         streamingCallback(model.conversationId, prettifiedTextContent, true);
 
         await this.conversationModel.updateOne(
             { _id: model.conversationId },
-            { references: [...conversationReferences, ...distinctReferences] },
+            {
+                references: conversationReferences,
+            },
         );
 
         const response = await this.messageModel.create({
@@ -221,7 +236,7 @@ export default class AssistantService extends BaseService {
             content: prettifiedTextContent,
             conversationId: model.conversationId,
             role: 'assistant',
-            references: distinctReferences,
+            references: decoratedAnnotations,
         });
 
         return new SendMessageResponseModel(
@@ -230,18 +245,14 @@ export default class AssistantService extends BaseService {
             response.role,
             response.conversationId,
             conversationTitle,
-            distinctReferences,
+            conversationReferences,
         );
     }
 
-    private async prettifyTextAndAnnotations(
+    private prettifyText(
         textContent: string,
         annotations: Annotation[],
-        decorateReferences: boolean,
-    ): Promise<{
-        prettifiedTextContent: string;
-        distinctReferences: FileMetadata[];
-    }> {
+    ): string {
         let prettifiedTextContent = textContent;
 
         for (const annotation of annotations)
@@ -251,29 +262,33 @@ export default class AssistantService extends BaseService {
             );
 
         const distinctFileIds = this.getDistinticFileIds(annotations);
-        const distinctReferences: FileMetadata[] = [];
 
-        for (let i = 0; i < distinctFileIds.length; i++) {
-            const fileId = distinctFileIds[i];
-
-            if (decorateReferences) {
-                const fileMetadata = await this.fileMetadataModel.findOne({
-                    fileId,
-                });
-
-                distinctReferences.push(fileMetadata);
-            }
-
+        distinctFileIds.forEach((fileId, index) => {
             prettifiedTextContent = prettifiedTextContent.replaceAll(
                 `[${fileId}]`,
-                `<sup>[${i + 1}]</sup>`,
+                `<sup>[${index + 1}]</sup>`,
             );
+        });
+
+        return prettifiedTextContent;
+    }
+
+    private async decorateAnnotations(
+        annotations: Annotation[],
+    ): Promise<FileMetadata[]> {
+        const distinctFileIds = this.getDistinticFileIds(annotations);
+
+        const decoratedAnnotations: FileMetadata[] = [];
+
+        for (const fileId of distinctFileIds) {
+            const fileMetadata = await this.fileMetadataModel.findOne({
+                fileId,
+            });
+
+            decoratedAnnotations.push(fileMetadata);
         }
 
-        return {
-            prettifiedTextContent,
-            distinctReferences,
-        };
+        return decoratedAnnotations;
     }
 
     private getDistinticFileIds(array: Annotation[]): string[] {

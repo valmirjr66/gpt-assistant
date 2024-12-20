@@ -49,8 +49,14 @@ export class AssistantGateway
             conversation: SimplifiedConversation,
         ) => this.server.emit('newConversation', conversation);
 
-        const referenceSnapshotCallback = (references: FileMetadata[]) =>
-            this.server.emit('referenceSnapshot', references);
+        const referenceSnapshotCallback = (
+            conversationId: string,
+            references: FileMetadata[],
+        ) =>
+            this.server.emit('referencesSnapshot', {
+                conversationId,
+                references,
+            });
 
         this.assistantService.sendMessage(
             messageModel,
