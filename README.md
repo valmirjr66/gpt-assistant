@@ -8,7 +8,6 @@
 -   NOTION_TOKEN
 -   BASE_BLOB_PATH (e.g.: "./storage")
 -   DATABASE_URL (e.g.: "mongodb+srv://<user>:<password>@projetos.splss.mongodb.net/projetos?retryWrites=true&w=majority&appName=projetos")
--   BLOB_MANAGEMENT_STRATEGY ("cloud" or "local")
 
 2. Run `npm i`
 3. Run `npm start`
