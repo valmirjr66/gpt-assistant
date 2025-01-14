@@ -22,7 +22,7 @@ export class AssistantGateway
     constructor(private readonly assistantService: AssistantService) {}
 
     @WebSocketServer() server: Server;
-    private logger: Logger = new Logger('AssistantGateway');
+    private readonly logger: Logger = new Logger('AssistantGateway');
 
     @SubscribeMessage('message')
     handleMessage(client: Socket, payload: SendMessageRequestPayload): void {

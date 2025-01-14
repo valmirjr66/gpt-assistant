@@ -22,7 +22,7 @@ import { Message } from './schemas/MessageSchema';
 
 @Injectable()
 export default class AssistantService extends BaseService {
-    private logger: Logger = new Logger('AssistantService');
+    private readonly logger: Logger = new Logger('AssistantService');
 
     constructor(
         @Optional()
