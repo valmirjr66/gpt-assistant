@@ -11,8 +11,6 @@ export default class VectorDatabaseHandler {
     private readonly TEXT_SPLITTER_CHUNK_OVERLAP = 100;
     private readonly UPSERT_BATCH_SIZE = 100;
     private readonly QUERY_TOP_K_AMOUNT = 5;
-    private readonly VECTORS_DIMENSION = 1536;
-    private readonly DISTANCE_METRIC = 'cosine';
 
     private readonly logger: Logger = new Logger('VectorDatabaseHandler');
     private readonly pineconeClient: Pinecone;
@@ -21,36 +19,6 @@ export default class VectorDatabaseHandler {
         this.pineconeClient = new Pinecone({
             apiKey: process.env.PINECONE_API_KEY,
         });
-    }
-
-    async teardownAndSetupIndex(): Promise<void> {
-        const { indexes } = await this.pineconeClient.listIndexes();
-
-        if (indexes.some((index) => index.name === this.indexName)) {
-            this.logger.log(
-                'Index exists and will be deleted before being recreated',
-            );
-
-            await this.pineconeClient.deleteIndex(this.indexName);
-
-            this.logger.log('5 seconds delay to avoid index naming conflicts');
-
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-        }
-
-        await this.pineconeClient.createIndex({
-            name: this.indexName,
-            dimension: this.VECTORS_DIMENSION,
-            metric: this.DISTANCE_METRIC,
-            spec: {
-                serverless: {
-                    cloud: 'aws',
-                    region: 'us-east-1',
-                },
-            },
-        });
-
-        this.logger.log(`Index "${this.indexName}" created`);
     }
 
     async processFile(id: string, name: string, buffer: Buffer): Promise<void> {

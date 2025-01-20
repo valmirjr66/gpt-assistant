@@ -15,7 +15,7 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', "data/**", "coverage/**"],
+  ignorePatterns: ['.eslintrc.js', "data/**", "coverage/**", "scripts/**"],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
