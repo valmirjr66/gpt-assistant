@@ -9,7 +9,8 @@ export default class PdfDocumentReader extends AbstractDocumentReader<PdfDocumen
 
     async readFile() {
         const fileBuffer = await fs.promises.readFile(this.filePath);
-        const pdfPreviewFilePath = `${this.fileDirectory}/${this.fileNameWithoutExtension}.preview.png`;
+        const pdfPreviewFileName = `${this.fileNameWithoutExtension}.preview.png`;
+        const pdfPreviewFilePath = `${this.fileDirectory}/${pdfPreviewFileName}`;
         const pdfHasPreview = fs.existsSync(pdfPreviewFilePath);
 
         if (pdfHasPreview) {
@@ -18,6 +19,7 @@ export default class PdfDocumentReader extends AbstractDocumentReader<PdfDocumen
             return new PdfDocumentFile(
                 this.fileNameWithExtension,
                 fileBuffer,
+                `${this.fileNameWithoutExtension}.preview.png`,
                 previewImage,
             );
         } else {
