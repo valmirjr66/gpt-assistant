@@ -22,6 +22,7 @@ async function bootstrap() {
         .addTag('Assistant')
         .addTag('Telegram Bot')
         .addTag('Notion')
+        .addTag('Artifacts')
         .build();
 
     const document = SwaggerModule.createDocument(app, config);
