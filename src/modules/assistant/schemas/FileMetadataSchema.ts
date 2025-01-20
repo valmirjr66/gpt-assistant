@@ -7,15 +7,12 @@ export type FileMetadataDocument = HydratedDocument<FileMetadata>;
 @Schema({ timestamps: true })
 export class FileMetadata extends BaseSchema {
     @Prop({ required: true })
-    fileId: string;
-
-    @Prop({ required: true })
     downloadURL: string;
 
     @Prop({ required: true })
     displayName: string;
 
-    @Prop({ required: true })
+    @Prop()
     previewImageURL: string;
 }
 
