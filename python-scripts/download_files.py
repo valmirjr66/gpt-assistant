@@ -15,7 +15,7 @@ from conexao_banco import ConexaoBanco
 
 load_dotenv()
 
-OPENAI_KEY = os.getenv("OPENAI_SECRET_KEY")
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 VECTOR_STORE_ID = "vs_iQANbqxbwAs574Hz3ajb45FR"
 ASSISTANT_ID = "asst_c8ASgOrDsBBWNtBDq0ianqpL"
 PASTA_SCRIPTS = "python-scripts"
@@ -103,8 +103,7 @@ def baixa_video(x):
     inst_cloud.upload_blob(blob_name, converted_path)
 
     with open(converted_path, "rb") as file:
-        uploaded_file = inst_openai.files.create(
-            file=file, purpose="assistants")
+        uploaded_file = inst_openai.files.create(file=file, purpose="assistants")
 
     id_file = uploaded_file.id
     file_ids.append(id_file)

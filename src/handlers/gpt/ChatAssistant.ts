@@ -17,9 +17,7 @@ export class TextResponse {
 export default class ChatAssistant {
     private readonly logger: Logger = new Logger('ChatAssistant');
     private readonly assistantId: string;
-    private readonly openaiClient: OpenAI = new OpenAI({
-        apiKey: process.env.OPENAI_SECRET_KEY,
-    });
+    private readonly openaiClient: OpenAI = new OpenAI();
 
     constructor(assistantId: string) {
         this.assistantId = assistantId;
