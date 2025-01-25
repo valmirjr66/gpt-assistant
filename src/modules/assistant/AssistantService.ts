@@ -170,7 +170,8 @@ export default class AssistantService extends BaseService {
         streamingCallback?: (
             conversationId: string,
             textSnapshot: string,
-            finished: boolean,
+            decoratedAnnotations?: FileMetadata[],
+            finished?: boolean,
         ) => void,
         conversationMetadataUpdateCallback?: (
             conversation: SimplifiedConversation,
@@ -233,11 +234,7 @@ export default class AssistantService extends BaseService {
             ? await this.chatAssistant.addMessageToThreadByStream(
                   threadId,
                   model.content,
-                  (
-                      textSnapshot: string,
-                      annotationsSnapshot: Annotation[],
-                      finished: boolean,
-                  ) => {
+                  (textSnapshot: string, annotationsSnapshot: Annotation[]) => {
                       const prettifiedTextContent = this.prettifyText(
                           textSnapshot,
                           annotationsSnapshot,
@@ -246,7 +243,6 @@ export default class AssistantService extends BaseService {
                       streamingCallback(
                           model.conversationId,
                           prettifiedTextContent,
-                          finished,
                       );
                   },
                   async (annotationsSnapshot: Annotation[]) => {
@@ -283,6 +279,7 @@ export default class AssistantService extends BaseService {
             streamingCallback(
                 model.conversationId,
                 prettifiedTextContent,
+                decoratedAnnotations,
                 true,
             );
 
@@ -307,7 +304,7 @@ export default class AssistantService extends BaseService {
             response.role,
             response.conversationId,
             conversationTitle,
-            updatedConversationReferences,
+            decoratedAnnotations,
         );
     }
 

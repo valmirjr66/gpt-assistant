@@ -37,11 +37,13 @@ export class AssistantGateway
         const streamingCallback = (
             conversationId: string,
             textSnapshot: string,
-            finished: boolean,
+            decoratedAnnotations?: FileMetadata[],
+            finished?: boolean,
         ) => {
             this.server.emit('message', {
                 conversationId,
                 textSnapshot,
+                decoratedAnnotations,
                 finished,
             });
         };
