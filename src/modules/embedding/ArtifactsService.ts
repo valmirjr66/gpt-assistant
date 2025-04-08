@@ -9,6 +9,8 @@ import { v4 as uuidv4 } from 'uuid';
 import BaseService from '../../BaseService';
 import ProcessArtifactRequestModel from '../assistant/model/ProcessArtifactRequestModel';
 import { FileMetadata } from '../assistant/schemas/FileMetadataSchema';
+import { VectorQueryResponse } from 'src/types/vector';
+import QueryDatabaseResponseModel from '../assistant/model/QueryDatabaseResponseModel';
 
 @Injectable()
 export default class ArtifactsService extends BaseService {
@@ -59,21 +61,45 @@ export default class ArtifactsService extends BaseService {
         );
     }
 
-    async queryDatabase(query: string): Promise<string> {
+    async queryDatabase(query: string): Promise<QueryDatabaseResponseModel> {
         const queryMatches = await this.vectorBaseHandler.queryDatabase(query);
 
-        const concatenatedQueryMatches = queryMatches
-            .map((match) => match.content)
-            .join('\n');
+        const matchesDecoratedWithReferences: (VectorQueryResponse & {
+            displayName: string;
+            downloadURL: string;
+        })[] = [];
 
-        const augmentedPrompt = `Using the following information, answer the prompt at end: ${concatenatedQueryMatches}
+        let concatenatedQueryMatches = '';
+
+        for (const match of queryMatches) {
+            const associatedReference = await this.fileMetadataModel.findById(
+                match.id,
+            );
+
+            matchesDecoratedWithReferences.push({
+                id: match.id,
+                content: match.content,
+                score: match.score,
+                range: match.range,
+                downloadURL: associatedReference.downloadURL,
+                displayName: associatedReference.displayName,
+            });
+
+            concatenatedQueryMatches += `\n\n"""${match.content}"""`;
+        }
+
+        const augmentedPrompt = `Using the following information, answer the prompt at end:${concatenatedQueryMatches}
         \n========================\n
-        ${query}`;
+        Prompt: "${query}"`;
 
         const completion = await new SimpleAgent(
             `You are a helpful assistant created to answer question based on RAG retrieval.`,
         ).createCompletion(augmentedPrompt);
 
-        return completion;
+        return {
+            augmentedPrompt,
+            source: matchesDecoratedWithReferences,
+            augumentedReponse: completion,
+        };
     }
 }

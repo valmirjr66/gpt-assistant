@@ -21,6 +21,7 @@ import BaseController from '../../BaseController';
 import ProcessArtifactRequestDto from '../assistant/dto/ProcessArtifactRequestDto';
 import ProcessArtifactRequestModel from '../assistant/model/ProcessArtifactRequestModel';
 import ArtifactsService from './ArtifactsService';
+import QueryDatabaseResponseDto from '../assistant/dto/QueryDatabaseResponseDto';
 
 @ApiTags('Artifacts')
 @Controller('artifacts')
@@ -64,7 +65,9 @@ export default class ArtifactsController extends BaseController {
     @ApiInternalServerErrorResponse({
         description: ResponseDescriptions.INTERNAL_SERVER_ERROR,
     })
-    async query(@Query('query') query: string): Promise<string> {
+    async query(
+        @Query('query') query: string,
+    ): Promise<QueryDatabaseResponseDto> {
         return await this.artifactsService.queryDatabase(query);
     }
 }

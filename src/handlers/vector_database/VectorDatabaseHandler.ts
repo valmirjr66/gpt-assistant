@@ -135,10 +135,11 @@ export default class VectorDatabaseHandler {
 
         if (queryMatches.length) {
             return queryMatches.map((match) => {
-                const { metadata, id } = match;
+                const { metadata, id, score } = match;
 
                 return {
                     id,
+                    score,
                     content: metadata.content.toString(),
                     range: {
                         from: +metadata.fromLine.valueOf(),
