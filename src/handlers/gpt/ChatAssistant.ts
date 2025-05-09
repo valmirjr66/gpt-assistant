@@ -15,11 +15,9 @@ export class TextResponse {
 }
 
 export default class ChatAssistant {
-    private logger: Logger = new Logger('ChatAssistant');
+    private readonly logger: Logger = new Logger('ChatAssistant');
     private readonly assistantId: string;
-    private readonly openaiClient: OpenAI = new OpenAI({
-        apiKey: process.env.OPENAI_SECRET_KEY,
-    });
+    private readonly openaiClient: OpenAI = new OpenAI();
 
     constructor(assistantId: string) {
         this.assistantId = assistantId;
@@ -101,7 +99,7 @@ export default class ChatAssistant {
             })
             .on('textCreated', () =>
                 this.logger.log(
-                    `textCreated for thread '${threadId}' with following incoming message '${message}'`,
+                    `TextCreated for thread '${threadId}' with following incoming message '${message}'`,
                 ),
             )
             .on('textDelta', (_textDelta, snapshot) =>

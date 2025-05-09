@@ -9,7 +9,7 @@ export default class SimpleAgent {
     }
 
     async createCompletion(message: string): Promise<string> {
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_SECRET_KEY });
+        const openai = new OpenAI();
 
         const processedMessages: Array<ChatCompletionMessageParam> = [
             { role: 'system', content: this.setupMessage },
